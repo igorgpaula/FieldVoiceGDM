@@ -720,8 +720,10 @@ let ultimoComandoVozEm = 0;
 const JANELA_DEDUP_VOZ_MS = 900;
 let ultimoTokenAcaoVoz = '';
 let ultimoTokenAcaoVozEm = 0;
-const JANELA_DEDUP_NOTA_VOZ_MS = 1600;
-const JANELA_TRAVA_NOTA_VOZ_MS = 450;
+let bloquearNotasVozAte = 0;
+const JANELA_DEDUP_NOTA_VOZ_MS = 3000;
+const JANELA_TRAVA_NOTA_VOZ_MS = 2200;
+const PAUSA_MICROFONE_APOS_NOTA_MS = 1800;
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -777,13 +779,18 @@ function receberComandoVoz(texto) {
   const agora = Date.now();
   const token = tokenAcaoVoz(normalizado);
 
+  if (token.startsWith('nota:') && agora < bloquearNotasVozAte) {
+    document.getElementById('debug').textContent = `🔒 nota em espera ignorada: "${texto}"`;
+    return null;
+  }
+
   if (
     normalizado &&
     normalizado === ultimoComandoVoz &&
     agora - ultimoComandoVozEm < JANELA_DEDUP_VOZ_MS
   ) {
     document.getElementById('debug').textContent = `🔁 duplicado ignorado: "${texto}"`;
-    return;
+    return null;
   }
 
   if (
@@ -792,7 +799,7 @@ function receberComandoVoz(texto) {
     agora - ultimoTokenAcaoVozEm < JANELA_DEDUP_NOTA_VOZ_MS
   ) {
     document.getElementById('debug').textContent = `🔁 nota repetida ignorada: "${texto}"`;
-    return;
+    return null;
   }
 
   if (
@@ -801,17 +808,31 @@ function receberComandoVoz(texto) {
     agora - ultimoTokenAcaoVozEm < JANELA_TRAVA_NOTA_VOZ_MS
   ) {
     document.getElementById('debug').textContent = `🔒 nota muito próxima ignorada: "${texto}"`;
-    return;
+    return null;
   }
 
   ultimoComandoVoz = normalizado;
   ultimoComandoVozEm = agora;
   ultimoTokenAcaoVoz = token;
   ultimoTokenAcaoVozEm = agora;
+
+  if (token.startsWith('nota:')) {
+    bloquearNotasVozAte = agora + JANELA_TRAVA_NOTA_VOZ_MS;
+  }
+
   processarComando(texto);
+  return token;
 }
 
 function limparDedupVoz() {
+  ultimoComandoVoz = '';
+  ultimoComandoVozEm = 0;
+  ultimoTokenAcaoVoz = '';
+  ultimoTokenAcaoVozEm = 0;
+  bloquearNotasVozAte = 0;
+}
+
+function limparComandoVozSemLiberarNota() {
   ultimoComandoVoz = '';
   ultimoComandoVozEm = 0;
   ultimoTokenAcaoVoz = '';
@@ -860,7 +881,11 @@ const VozEngine = {
         const txt = res?.matches?.[0];
         if (txt) {
           document.getElementById('debug').textContent = `"${txt}"`;
-          receberComandoVoz(txt.toLowerCase());
+          const acao = receberComandoVoz(txt.toLowerCase());
+          if (acao?.startsWith('nota:')) {
+            await plugin.stop().catch(() => {});
+            await new Promise(r => setTimeout(r, PAUSA_MICROFONE_APOS_NOTA_MS));
+          }
         }
       } catch (e) {
         if (!ativo) break;
@@ -1251,7 +1276,7 @@ function garantirFocoDigitacao() {
 
 function proximaNota() {
   if (!dados.length) return;
-  limparDedupVoz();
+  limparComandoVozSemLiberarNota();
   if (colunaAtual < NUM_AVALIACOES) {
     colunaAtual++;
   } else if (current + 1 < dados.length) {
@@ -1270,7 +1295,7 @@ function proximaNota() {
 
 function voltarNota() {
   if (!dados.length) return;
-  limparDedupVoz();
+  limparComandoVozSemLiberarNota();
   if (colunaAtual > 1) {
     colunaAtual--;
   } else if (current > 0) {
@@ -1287,7 +1312,7 @@ function voltarNota() {
 
 function pularParcela() {
   if (!dados.length) return;
-  limparDedupVoz();
+  limparComandoVozSemLiberarNota();
   if (current + 1 < dados.length) {
     current++;
     colunaAtual = 1;
@@ -1306,7 +1331,7 @@ function irParaParcelaComVoz(numero) {
   if (idx >= 0) {
     current = idx;
     atualizarColunaAtual();
-    limparDedupVoz();
+    limparComandoVozSemLiberarNota();
     atualizarTela();
     salvarDados();
     beepNavegacao();
