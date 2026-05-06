@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Field Voice PRO</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1c3d2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FieldVoice">
+<style>
+:root {
+  --bg:           #ECEEF0;
+  --card:         #FFFFFF;
+  --nav:          #163320;
+  --sys-green:    #2DB84B;
+  --sys-green-lt: rgba(45,184,75,0.14);
+  --sys-blue:     #007AFF;
+  --sys-blue-lt:  rgba(0,122,255,0.13);
+  --sys-red:      #FF3B30;
+  --sys-orange:   #FF9500;
+  --sys-gray:     #8E8E93;
+  --sys-gray2:    #AEAEB2;
+  --label:        #000000;
+  --label2:       #3A3A3C;
+  --label3:       #636366;
+  --sep:          rgba(60,60,67,0.10);
+  --card-shadow:  0 1px 2px rgba(0,0,0,0.06), 0 3px 10px rgba(0,0,0,0.07);
+  --card-shadow-lg: 0 4px 20px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.06);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+  font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  min-height: 100%;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV BAR ── */
+.nav-bar {
+  background: linear-gradient(160deg, #1e4530 0%, #163320 100%);
+  padding: calc(env(safe-area-inset-top) + 14px) 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.22);
+}
+.nav-left { display: flex; flex-direction: column; gap: 2px; }
+.nav-title { color: #fff; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.5px; }
+.nav-sub   { color: rgba(255,255,255,0.5); font-size: 0.65rem; font-weight: 500; letter-spacing: 0.3px; }
+.mode-badge {
+  font-size: 0.62rem; font-weight: 700;
+  padding: 5px 12px; border-radius: 20px;
+  letter-spacing: 0.2px;
+}
+.mode-badge.offline { background: rgba(45,184,75,0.25); color: #3dca5e; }
+.mode-badge.web     { background: rgba(255,59,48,0.22); color: #ff6b62; }
+
+/* ── REDE TOGGLE ── */
+.nav-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.rede-toggle {
+  display: flex; align-items: center; gap: 5px;
+  border: none; border-radius: 20px; padding: 4px 10px 4px 6px;
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px;
+  cursor: pointer; transition: background 0.25s, color 0.25s;
+}
+.rede-toggle.online  { background: rgba(0,122,255,0.22); color: #5ac8fa; }
+.rede-toggle.offline { background: rgba(142,142,147,0.22); color: #aeaeb2; }
+.rede-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.rede-toggle.online  .rede-dot { background: #5ac8fa; }
+.rede-toggle.offline .rede-dot { background: #636366; }
+
+/* ── CONTENT ── */
+.content { padding: 12px 0 4px; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 0.7rem; font-weight: 700;
+  color: var(--label3); text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 20px 7px;
+  margin-top: 14px;
+}
+
+/* ── IOS CARD ── */
+.ios-card {
+  background: var(--card);
+  border-radius: 16px;
+  margin: 0 16px 12px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+/* ── SEGMENTED CONTROL ── */
+.seg-wrap { padding: 12px 14px 14px; }
+.seg-ctrl {
+  background: rgba(118,118,128,0.12);
+  border-radius: 10px;
+  padding: 2px;
+  display: flex;
+  gap: 1px;
+}
+.seg-btn {
+  flex: 1; border: none; border-radius: 8px;
+  padding: 8px 4px; font-size: 0.9rem; font-weight: 600;
+  background: transparent; color: var(--label2);
+  cursor: pointer; transition: all 0.18s;
+}
+.seg-btn.ativo {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.14), 0 0 1px rgba(0,0,0,0.06);
+  color: var(--label);
+}
+
+/* ── FILE PICKER ── */
+.file-row {
+  display: flex; align-items: center;
+  padding: 14px 16px; gap: 12px;
+}
+.file-icon  { font-size: 1.3rem; }
+.file-info  { flex: 1; }
+.file-title { font-size: 0.9rem; font-weight: 600; color: var(--label); }
+.file-desc  { font-size: 0.68rem; color: var(--label3); margin-top: 1px; }
+.file-pick-label {
+  background: var(--sys-blue-lt);
+  color: var(--sys-blue);
+  border-radius: 11px;
+  padding: 10px 16px;
+  font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center;
+  min-height: 44px;
+}
+input[type="file"] { display: none; }
+
+/* ── HERO CARD (parcela atual) ── */
+.hero-card {
+  background: var(--card);
+  border-radius: 22px;
+  margin: 0 16px 12px;
+  padding: 20px 20px 18px;
+  box-shadow: var(--card-shadow-lg);
+  border: 1px solid rgba(255,255,255,0.8);
+}
+.hero-eyebrow {
+  font-size: 0.68rem; font-weight: 700; color: var(--label3);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+}
+#plot {
+  font-size: 1.5rem; font-weight: 800;
+  color: var(--label); letter-spacing: -0.5px; line-height: 1.3;
+}
+.notas-container {
+  display: flex; justify-content: center;
+  flex-wrap: wrap; gap: 10px; margin-top: 18px;
+}
+.nota-individual { text-align: center; }
+.nota-individual .label {
+  font-size: 0.65rem; font-weight: 700;
+  color: var(--label3); margin-bottom: 6px; letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.nota-individual .valor {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16px; font-size: 1.4rem; font-weight: 800;
+  background: rgba(118,118,128,0.09); color: var(--label2);
+  border: 1.5px solid transparent;
+  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nota-individual .valor.filled {
+  background: var(--sys-green-lt);
+  color: var(--sys-green);
+  border-color: rgba(45,184,75,0.25);
+}
+.nota-individual .valor.active {
+  background: var(--sys-blue); color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(0,122,255,0.35);
+  transform: scale(1.08);
+}
+
+/* ── INPUT MANUAL ── */
+.input-card {
+  background: var(--card);
+  border-radius: 18px;
+  margin: 0 16px 12px;
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--card-shadow-lg);
+  border: 1.5px solid var(--sys-blue-lt);
+  animation: slideDown 0.22s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.input-label { font-size: 0.88rem; font-weight: 700; color: var(--label2); white-space: nowrap; }
+#notaDigitada {
+  flex: 1; max-width: 80px; border: 2px solid var(--sep);
+  border-radius: 13px; padding: 12px 8px;
+  font-size: 1.7rem; font-weight: 800; text-align: center;
+  background: var(--bg); color: var(--label);
+  -webkit-appearance: none; transition: all 0.18s;
+}
+#notaDigitada:focus {
+  outline: none;
+  border-color: var(--sys-blue);
+  box-shadow: 0 0 0 4px rgba(0,122,255,0.15);
+  background: #fff;
+}
+.focar-btn {
+  background: var(--sys-green); color: #fff; border: none;
+  border-radius: 11px; padding: 12px 18px;
+  font-size: 0.84rem; font-weight: 700; cursor: pointer;
+  flex-shrink: 0; min-height: 44px;
+}
+
+/* ── STATUS BANNER ── */
+.status-card {
+  background: var(--card);
+  border-radius: 16px;
+  margin: 0 16px 12px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+.status-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--sys-gray2); flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.status-dot.active {
+  background: var(--sys-green);
+  box-shadow: 0 0 0 3px rgba(45,184,75,0.2);
+  animation: pulse-dot 1.4s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 0 3px rgba(45,184,75,0.2); }
+  50%      { box-shadow: 0 0 0 7px rgba(45,184,75,0); }
+}
+#status { font-size: 0.85rem; font-weight: 700; color: var(--label2); }
+.status-hint {
+  font-size: 0.65rem; color: var(--label3);
+  margin-left: auto; text-align: right; line-height: 1.5;
+}
+
+
+/* ── GRID SECTION ── */
+#gridContainer {
+  background: var(--card);
+  border-radius: 16px;
+  margin: 0 16px 12px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+.grid-header-bar {
+  padding: 13px 16px 11px;
+  font-size: 0.68rem; font-weight: 600;
+  color: var(--label3); text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--sep);
+}
+.pagina-botoes {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 9px 16px;
+  border-bottom: 1px solid var(--sep);
+}
+.pagina-botoes button {
+  background: rgba(0,122,255,0.1); color: var(--sys-blue);
+  border: none; border-radius: 8px; padding: 6px 14px;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+}
+.pagina-botoes span { font-size: 0.78rem; color: var(--label2); font-weight: 500; }
+.scroll-container { max-height: 360px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.grid-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.grid-table th {
+  background: #F7F7F7; color: var(--label3);
+  font-size: 0.62rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 8px 6px; border-bottom: 1px solid var(--sep);
+  position: sticky; top: 0; z-index: 10;
+}
+.grid-table td {
+  padding: 13px 6px; text-align: center;
+  border-bottom: 1px solid var(--sep);
+  cursor: pointer; color: var(--label); font-size: 0.88rem;
+}
+.grid-table td:first-child {
+  font-weight: 700; font-size: 0.9rem; color: var(--label2); padding-left: 14px;
+}
+.grid-table td:active                   { background: rgba(0,0,0,0.05) !important; }
+.grid-table .linha-atual td             { background: rgba(52,199,89,0.07); }
+.grid-table .linha-atual td:first-child { color: var(--sys-green); font-weight: 800; }
+.grid-table .coluna-ativa               { background: rgba(0,122,255,0.1) !important; color: var(--sys-blue) !important; font-weight: 700; }
+.grid-table .testemunha td:first-child  { padding-left: 10px; border-left: 4px solid var(--sys-green); }
+.grid-info {
+  padding: 9px 16px; font-size: 0.6rem;
+  color: var(--label3); text-align: center;
+  border-top: 1px solid var(--sep);
+}
+
+/* ── BOTTOM TAB BAR ── */
+.bottom-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(252,252,254,0.92);
+  -webkit-backdrop-filter: saturate(200%) blur(28px);
+  backdrop-filter: saturate(200%) blur(28px);
+  border-top: 0.5px solid rgba(60,60,67,0.18);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  display: flex; justify-content: space-around; align-items: center;
+  box-shadow: 0 -1px 0 rgba(60,60,67,0.1), 0 -4px 16px rgba(0,0,0,0.06);
+}
+.bar-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: none; background: transparent;
+  padding: 8px 10px; border-radius: 14px;
+  cursor: pointer; min-width: 56px; min-height: 50px;
+  transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1), background 0.15s;
+}
+.bar-btn:active { transform: scale(0.85); }
+.bar-icon  { font-size: 1.5rem; line-height: 1; }
+.bar-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0px; }
+.bar-btn.primary .bar-label { color: var(--sys-green); }
+.bar-btn.danger  .bar-label { color: var(--sys-red);   }
+.bar-btn.export  .bar-label { color: var(--sys-orange); }
+.bar-btn.manual  .bar-label { color: var(--sys-blue);  }
+.bar-btn.manual.ativo { background: var(--sys-blue); }
+.bar-btn.manual.ativo .bar-label { color: #fff; }
+.bar-btn.manual.ativo .bar-icon { filter: brightness(100); }
+.bar-btn.reset   .bar-label { color: var(--sys-gray);  }
+
+/* ── BEEP SYSTEM ── */
+@keyframes nota-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.22); box-shadow: 0 6px 20px rgba(45,184,75,0.4); }
+  100% { transform: scale(1.08); }
+}
+.nota-pop { animation: nota-pop 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+/* ── DEBUG ── */
+.debug-pill {
+  background: rgba(0,0,0,0.04);
+  border-radius: 12px;
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.65rem; color: var(--label3);
+  line-height: 1.5;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+@media (max-width: 375px) {
+  .bar-btn    { min-width: 46px; padding: 7px 5px; }
+  .bar-icon   { font-size: 1.3rem; }
+  .bar-label  { font-size: 0.56rem; }
+  .nota-individual .valor { width: 46px; height: 46px; font-size: 1.25rem; }
+  #plot { font-size: 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV BAR ── -->
+<div class="nav-bar">
+  <div class="nav-left">
+    <span class="nav-title">🌾 Field Voice PRO</span>
+    <span class="nav-sub">Multitrait · coleta offline</span>
+  </div>
+  <div class="nav-right">
+    <span id="badgeModo" class="mode-badge offline">carregando...</span>
+    <button id="toggleRede" class="rede-toggle offline" onclick="toggleRede()">
+      <span class="rede-dot"></span>
+      <span id="redeLabel">OFFLINE</span>
+    </button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Avaliações por parcela -->
+  <p class="section-label">Avaliações por parcela</p>
+  <div class="ios-card">
+    <div class="seg-wrap">
+      <div class="seg-ctrl">
+        <button class="seg-btn" onclick="setNumAvaliacoes(1)">1</button>
+        <button class="seg-btn" onclick="setNumAvaliacoes(2)">2</button>
+        <button class="seg-btn" onclick="setNumAvaliacoes(3)">3</button>
+        <button class="seg-btn" onclick="setNumAvaliacoes(4)">4</button>
+        <button class="seg-btn ativo" onclick="setNumAvaliacoes(5)">5</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV -->
+  <p class="section-label">Arquivo</p>
+  <div class="ios-card">
+    <div class="file-row">
+      <span class="file-icon">📂</span>
+      <div class="file-info">
+        <div class="file-title">Carregar CSV</div>
+        <div class="file-desc" id="fileLabel">plot_id · genotipo · testemunha</div>
+      </div>
+      <label class="file-pick-label">
+        Selecionar
+        <input type="file" id="fileInput" accept=".csv" onchange="carregarCSV()">
+      </label>
+    </div>
+  </div>
+
+  <!-- Parcela atual -->
+  <p class="section-label">Parcela atual</p>
+  <div class="hero-card">
+    <div class="hero-eyebrow">em avaliação</div>
+    <div id="plot">📋 Nenhum CSV carregado</div>
+    <div id="notasDisplay" class="notas-container"></div>
+    <div id="descricaoCard" style="display:none; margin-top:14px; background:rgba(255,149,0,0.10); border-radius:12px; padding:10px 13px; align-items:flex-start; gap:8px;">
+      <span style="font-size:1rem; flex-shrink:0;">📝</span>
+      <span id="descricaoTexto" style="font-size:0.82rem; font-weight:600; color:#3A3A3C; line-height:1.5; flex:1;"></span>
+      <button onclick="limparDescricao()" style="background:none; border:none; font-size:1rem; color:#8E8E93; cursor:pointer; padding:0 0 0 6px; flex-shrink:0; min-height:44px; min-width:44px;">✕</button>
+    </div>
+  </div>
+
+  <!-- Input de nota -->
+  <div class="input-card" id="manualCard" style="display:none;">
+    <span class="input-label">⌨️ Nota 1–9</span>
+    <input type="text" id="notaDigitada" inputmode="numeric" pattern="[1-9]" placeholder="—" autocomplete="off">
+  </div>
+
+  <!-- Status de voz -->
+  <p class="section-label">Reconhecimento de voz</p>
+  <div class="status-card">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="status">Parado</span>
+    <span class="status-hint">próxima · voltar<br>pular parcela · 1–9</span>
+  </div>
+
+  <!-- Debug -->
+  <div class="debug-pill">🧠 <span id="debug">Aguardando CSV...</span></div>
+
+  <!-- Grid de parcelas -->
+  <p class="section-label" id="gridLabel" style="display:none">Parcelas</p>
+  <div id="gridContainer" style="display:none">
+    <div class="grid-header-bar">📋 Lista de parcelas — toque para editar</div>
+    <div id="paginacao" class="pagina-botoes"></div>
+    <div class="scroll-container" id="scrollContainer">
+      <table class="grid-table" id="gridTable">
+        <thead id="gridHeader">
+          <tr><th>Parcela</th><th>Nota</th></tr>
+        </thead>
+        <tbody id="gridBody"></tbody>
+      </table>
+    </div>
+    <div class="grid-info">🔹 Verde = Testemunha &nbsp;·&nbsp; 🔸 Azul = célula ativa</div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- ── BOTTOM TAB BAR ── -->
+<div class="bottom-bar">
+  <button class="bar-btn primary" onclick="startRecognition()">
+    <span class="bar-icon">🎤</span>
+    <span class="bar-label">Voz</span>
+  </button>
+  <button class="bar-btn danger" onclick="stopRecognition()">
+    <span class="bar-icon">⛔</span>
+    <span class="bar-label">Parar</span>
+  </button>
+  <button class="bar-btn manual" id="btnManual" onclick="toggleManual()">
+    <span class="bar-icon">⌨️</span>
+    <span class="bar-label">Manual</span>
+  </button>
+  <button class="bar-btn export" onclick="exportarCSV()">
+    <span class="bar-icon">💾</span>
+    <span class="bar-label">Exportar</span>
+  </button>
+  <button class="bar-btn reset" onclick="resetarExperimento()">
+    <span class="bar-icon">🔄</span>
+    <span class="bar-label">Novo</span>
+  </button>
+</div>
+
+<script>
+// ========== AMBIENTE ==========
+const isNative = () =>
+  window.Capacitor &&
+  typeof window.Capacitor.isNativePlatform === 'function' &&
+  window.Capacitor.isNativePlatform();
+
+function atualizarBadgeModo() {
+  const b = document.getElementById('badgeModo');
+  if (isNative()) { b.className = 'mode-badge offline'; b.textContent = '📴 offline nativo'; }
+  else             { b.className = 'mode-badge web';     b.textContent = '🌐 modo web'; }
+}
+
+function setStatusVoz(ativado) {
+  document.getElementById('statusDot').classList.toggle('active', ativado);
+}
+
+// ========== CONFIGURAÇÕES ==========
+let NUM_AVALIACOES = 5;
+let colunaAtual = 1;
+
+function setNumAvaliacoes(num) {
+  NUM_AVALIACOES = num;
+  document.querySelectorAll('.seg-btn').forEach((btn, i) => {
+    btn.classList.toggle('ativo', i + 1 === num);
+  });
+  if (dados.length > 0) {
+    for (let i = 0; i < dados.length; i++) {
+      for (let j = 1; j <= NUM_AVALIACOES; j++) {
+        if (dados[i][`nota${j}`] === undefined) dados[i][`nota${j}`] = null;
+      }
+      for (let j = NUM_AVALIACOES + 1; j <= 10; j++) delete dados[i][`nota${j}`];
+    }
+  }
+  atualizarColunaAtual();
+  atualizarTela();
+  salvarDados();
+}
+
+function atualizarColunaAtual() {
+  if (!dados.length || current >= dados.length) { colunaAtual = 1; return; }
+  let p = dados[current], encontrou = false;
+  for (let j = 1; j <= NUM_AVALIACOES; j++) {
+    if (p[`nota${j}`] === null) { colunaAtual = j; encontrou = true; break; }
+  }
+  if (!encontrou) colunaAtual = NUM_AVALIACOES;
+}
+
+// ========== BEEP ==========
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function beep(freq, dur) {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = freq; osc.type = 'sine'; osc.start();
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur/1000);
+    osc.stop(audioCtx.currentTime + dur/1000);
+  } catch(e) {}
+}
+function beepNota()       { beep(900,100); if(navigator.vibrate) navigator.vibrate(40); }
+function beepCorrecao()   { beep(950,80); beep(900,80); if(navigator.vibrate) navigator.vibrate([40,40]); }
+function beepVira()       { beep(600,100); setTimeout(()=>beep(900,100),100); setTimeout(()=>beep(1200,100),200); if(navigator.vibrate) navigator.vibrate([50,50,50]); }
+function beepTestemunha() { beep(500,150); setTimeout(()=>beep(700,150),150); if(navigator.vibrate) navigator.vibrate([40,40]); }
+function beepNavegacao()  { beep(700,80); if(navigator.vibrate) navigator.vibrate(30); }
+
+// ========== VOZ ==========
+function _falarWeb(frase, rate = 0.95) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(frase);
+  utt.lang = 'pt-BR'; utt.rate = rate;
+  window.speechSynthesis.speak(utt);
+}
+
+function falarParcelaRapido() {
+  if (!dados.length || current >= dados.length) return;
+  if (!modoOnline) return;
+  const d = dados[current];
+  const frase = `Parcela ${d.plot_id}`;
+  const tts = window.Capacitor?.Plugins?.TextToSpeech;
+  if (tts) {
+    tts.speak({ text: frase, lang: 'pt-BR', rate: 1.2, pitch: 1.0, volume: 1.0, category: 'ambient' })
+       .catch(() => _falarWeb(frase, 1.2));
+  } else {
+    _falarWeb(frase, 1.2);
+  }
+}
+
+function falarParcelaAtual() {
+  if (!dados.length || current >= dados.length) { beepErro(); return; }
+  beepNavegacao();
+  if (!modoOnline) return;
+  const d = dados[current];
+  const frase = `Parcela ${d.plot_id}`;
+  const tts = window.Capacitor?.Plugins?.TextToSpeech;
+  if (tts) {
+    tts.speak({ text: frase, lang: 'pt-BR', rate: 0.95, pitch: 1.0, volume: 1.0, category: 'ambient' })
+       .catch(() => _falarWeb(frase));
+  } else {
+    _falarWeb(frase);
+  }
+}
+
+function beepErro()       { beep(300,250); if(navigator.vibrate) navigator.vibrate([80,60,80]); }
+
+function beepParcelaCompleta() {
+  beep(880, 180);
+  setTimeout(() => beep(780, 180), 220);
+  setTimeout(() => beep(660, 320), 440);
+}
+
+document.body.addEventListener('click', () => {
+  initAudio();
+  if (window.speechSynthesis) {
+    const u = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(u);
+  }
+}, { once: true });
+
+// ========== CONTROLE DE REPETIÇÃO ==========
+let ultimoComando = '';
+let ultimoComandoTimestamp = 0;
+const DEBOUNCE_MS = 800;
+
+// ========== VARIÁVEIS ==========
+let dados = [], current = 0, ativo = false, rodando = false, nomeCSV = '';
+let paginaAtual = 1;
+const POR_PAGINA = 100;
+let modoDescricao = false;
+let modoOnline = navigator.onLine;
+
+window.addEventListener('online',  () => { modoOnline = true;  atualizarToggleRede(); });
+window.addEventListener('offline', () => { modoOnline = false; atualizarToggleRede(); });
+
+function toggleRede() {
+  modoOnline = !modoOnline;
+  atualizarToggleRede();
+}
+function atualizarToggleRede() {
+  const btn = document.getElementById('toggleRede');
+  const lbl = document.getElementById('redeLabel');
+  if (!btn || !lbl) return;
+  btn.className = `rede-toggle ${modoOnline ? 'online' : 'offline'}`;
+  lbl.textContent = modoOnline ? 'ONLINE' : 'OFFLINE';
+}
+
+// ========== VOZ — CAMADA UNIFICADA ==========
+const VozEngine = {
+
+  async _loopNativo() {
+    const plugin = window.Capacitor.Plugins.SpeechRecognition;
+    rodando = true;
+    setStatusVoz(true);
+    document.getElementById('status').textContent = '🎙️ ouvindo...';
+
+    while (ativo) {
+      try {
+        const res = await plugin.start({ language:'pt-BR', maxResults:1, partialResults:false, popup:false });
+        if (!ativo) break;
+        const txt = res?.matches?.[0];
+        if (txt) { document.getElementById('debug').textContent = `"${txt}"`; processarComando(txt.toLowerCase()); }
+      } catch(e) {
+        if (!ativo) break;
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+    rodando = false;
+    setStatusVoz(false);
+    document.getElementById('status').textContent = 'Parado';
+  },
+
+  async iniciarNativo() {
+    const plugin = window.Capacitor?.Plugins?.SpeechRecognition;
+    if (!plugin) { document.getElementById('debug').textContent = '❌ Plugin não encontrado'; return; }
+    const perm = await plugin.checkPermissions();
+    if (perm.speechRecognition !== 'granted') {
+      const req = await plugin.requestPermissions();
+      if (req.speechRecognition !== 'granted') {
+        document.getElementById('debug').textContent = '❌ Permissão negada'; beepErro(); return;
+      }
+    }
+    ativo = true;
+    this._loopNativo();
+  },
+
+  pararNativo() {
+    ativo = false;
+    window.Capacitor?.Plugins?.SpeechRecognition?.stop().catch(()=>{});
+  },
+
+  _webRec: null,
+  _timeoutReiniciar: null,
+
+  iniciarWeb() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('Navegador sem suporte a voz'); return; }
+    this._webRec = new SR();
+    this._webRec.lang = 'pt-BR';
+    this._webRec.continuous = true;
+    this._webRec.interimResults = false;
+    ativo = true;
+    
+    this._webRec.onstart = () => { 
+      rodando = true; 
+      setStatusVoz(true); 
+      document.getElementById('status').textContent = '🎙️ ouvindo...'; 
+    };
+    
+    this._webRec.onerror = (e) => { 
+      if(e.error === 'not-allowed') { 
+        ativo = false; rodando = false; setStatusVoz(false); 
+        document.getElementById('status').textContent = '❌ microfone bloqueado'; 
+      } 
+    };
+    
+    this._webRec.onresult = (e) => {
+      const txt = e.results[e.results.length-1][0].transcript.toLowerCase();
+      document.getElementById('debug').textContent = `📝 "${txt}"`;
+      processarComando(txt);
+    };
+    
+    this._webRec.onend = () => { 
+      rodando = false; 
+      if (ativo) {
+        if (this._timeoutReiniciar) clearTimeout(this._timeoutReiniciar);
+        this._timeoutReiniciar = setTimeout(() => {
+          if (ativo && !rodando) {
+            try { this._webRec.start(); } catch(e) { console.warn(e); }
+          }
+        }, 300);
+      } else { 
+        setStatusVoz(false);
+        document.getElementById('status').textContent = 'Parado'; 
+      }
+    };
+    
+    this._webRec.start();
+  },
+
+  pararWeb() { 
+    ativo = false; 
+    if(this._webRec) this._webRec.stop(); 
+    rodando = false; 
+    if(this._timeoutReiniciar) clearTimeout(this._timeoutReiniciar);
+  },
+
+  iniciar() {
+    if (rodando) return;
+    if (!dados.length) { beepErro(); document.getElementById('debug').textContent = '⚠️ Carregue um CSV primeiro'; return; }
+    if (isNative()) this.iniciarNativo();
+    else this.iniciarWeb();
+  },
+
+  parar() {
+    if (isNative()) this.pararNativo();
+    else this.pararWeb();
+    setStatusVoz(false);
+    document.getElementById('status').textContent = 'Parado';
+  }
+};
+
+// ========== PROCESSAR COMANDO (COM DEBOUNCE) ==========
+function processarComando(texto) {
+  if (!texto) return;
+  
+  const agora = Date.now();
+  const raw = texto.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  
+  // Verifica se é o mesmo comando do último (ignora repetições)
+  if (raw === ultimoComando && (agora - ultimoComandoTimestamp) < DEBOUNCE_MS) {
+    document.getElementById('debug').textContent = `⏸️ Ignorado (repetição): "${texto}"`;
+    return;
+  }
+  
+  // Atualiza último comando
+  ultimoComando = raw;
+  ultimoComandoTimestamp = agora;
+
+  if (modoDescricao) {
+    modoDescricao = false;
+    if (dados.length && current < dados.length) {
+      dados[current].descricao = texto.trim();
+      salvarDados();
+      atualizarDisplayDescricao();
+      document.getElementById('debug').textContent = `📝 "${texto.trim()}"`;
+      beepNota();
+    }
+    return;
+  }
+
+  if (raw.includes('descricao')) {
+    if (!dados.length || current >= dados.length) { beepErro(); return; }
+    modoDescricao = true;
+    document.getElementById('debug').textContent = '📝 Aguardando descrição...';
+    if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+    return;
+  }
+  if (raw.includes('pular parcela') || raw.includes('proxima parcela') ||
+      raw.includes('avancar parcela')) { pularParcela(); return; }
+  if (raw.includes('proxima') || raw.includes('proximo')) { proximaNota(); return; }
+  if (raw.includes('voltar') || raw.includes('volta') || raw.includes('anterior')) { voltarNota(); return; }
+  if (raw.includes('parcela atual')) { falarParcelaAtual(); return; }
+  if (raw.includes('parcela')) {
+    const m = raw.match(/\d+/);
+    if (m) { irParaParcelaComVoz(parseInt(m[0])); return; }
+  }
+  const digito = raw.match(/\b([1-9])\b/);
+  if (digito) { salvarNota(parseInt(digito[1])); return; }
+
+  const ext = [
+    [/\bum\b|\buma\b|\bhum\b/, 1],
+    [/\bdois\b|\bduas\b/,      2],
+    [/\btres\b/,               3],
+    [/\bquatro\b/,             4],
+    [/\bcinco\b/,              5],
+    [/\bseis\b/,               6],
+    [/\bsete\b/,               7],
+    [/\boito\b/,               8],
+    [/\bnove\b/,               9],
+  ];
+  for (const [re, n] of ext) { if (re.test(raw)) { salvarNota(n); return; } }
+}
+
+// ========== PERMISSÃO ==========
+async function solicitarPermissao() {
+  if (!isNative()) { document.getElementById('debug').textContent = '⚠️ Apenas necessário no app nativo'; return; }
+  const plugin = window.Capacitor?.Plugins?.SpeechRecognition;
+  if (!plugin) return;
+  const r = await plugin.requestPermissions();
+  document.getElementById('debug').textContent =
+    r.speechRecognition === 'granted' ? '✅ Permissão concedida!' : '❌ Permissão negada';
+  if (r.speechRecognition !== 'granted') beepErro();
+}
+
+// ========== PERSISTÊNCIA ==========
+function salvarDados() {
+  if (!dados.length) return;
+  try {
+    localStorage.setItem('fieldVoiceAuto', JSON.stringify(
+      { dados, current, colunaAtual, nomeCSV, paginaAtual, numAvaliacoes: NUM_AVALIACOES }
+    ));
+  } catch(e) {}
+}
+
+function carregarDados() {
+  const s = localStorage.getItem('fieldVoiceAuto');
+  if (!s) return false;
+  try {
+    const e = JSON.parse(s);
+    if (e.dados?.length) {
+      dados = e.dados; current = e.current; colunaAtual = e.colunaAtual||1;
+      nomeCSV = e.nomeCSV||''; paginaAtual = e.paginaAtual||1;
+      if (e.numAvaliacoes) NUM_AVALIACOES = e.numAvaliacoes;
+      document.querySelectorAll('.seg-btn').forEach((b, i) => b.classList.toggle('ativo', i+1===NUM_AVALIACOES));
+      atualizarTela();
+      document.getElementById('debug').textContent = '✅ Dados recuperados!';
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function resetarExperimento() {
+  if (!confirm('⚠️ Apagar todos os dados?')) return;
+  localStorage.removeItem('fieldVoiceAuto');
+  dados = []; current = 0; colunaAtual = 1; nomeCSV = ''; paginaAtual = 1; modoDescricao = false;
+  VozEngine.parar();
+  document.getElementById('fileLabel').textContent = 'plot_id · genotipo · testemunha';
+  document.getElementById('notaDigitada').value = '';
+  atualizarTela();
+  document.getElementById('debug').textContent = '🔄 Reiniciado!';
+  garantirFocoDigitacao();
+}
+
+// ========== GRID ==========
+function scrollParaParcelaAtual() {
+  const d = document.getElementById('scrollContainer');
+  if (!d) return;
+  for (const row of d.querySelectorAll('tbody tr')) {
+    if (row.classList.contains('linha-atual')) { row.scrollIntoView({ behavior:'smooth', block:'center' }); break; }
+  }
+}
+
+function irParaCelula(idx, col) {
+  if (idx < 0 || idx >= dados.length || col < 1 || col > NUM_AVALIACOES) return;
+  current = idx; colunaAtual = col;
+  atualizarTela(); salvarDados(); beepNavegacao(); garantirFocoDigitacao();
+}
+
+function atualizarGrid() {
+  const gridLabel = document.getElementById('gridLabel');
+  if (!dados.length) {
+    document.getElementById('gridContainer').style.display = 'none';
+    gridLabel.style.display = 'none';
+    return;
+  }
+  document.getElementById('gridContainer').style.display = 'block';
+  gridLabel.style.display = 'block';
+
+  let hdr = '<tr><th>Parcela</th>';
+  for (let i = 1; i <= NUM_AVALIACOES; i++) hdr += `<th>A${i}</th>`;
+  hdr += '</tr>';
+  document.getElementById('gridHeader').innerHTML = hdr;
+
+  const total = Math.ceil(dados.length / POR_PAGINA);
+  const ini   = (paginaAtual - 1) * POR_PAGINA;
+  const fim   = Math.min(ini + POR_PAGINA, dados.length);
+  const pag   = dados.slice(ini, fim);
+
+  let pagHtml = '';
+  if (paginaAtual > 1)    pagHtml += `<button onclick="mudarPagina(${paginaAtual-1})">◀ Anterior</button>`;
+  pagHtml += `<span>${paginaAtual} / ${total}</span>`;
+  if (paginaAtual < total) pagHtml += `<button onclick="mudarPagina(${paginaAtual+1})">Próxima ▶</button>`;
+  document.getElementById('paginacao').innerHTML = pagHtml;
+
+  let html = '';
+  for (let i = 0; i < pag.length; i++) {
+    const p = pag[i], g = ini + i;
+    html += `<tr class="${g===current?'linha-atual':''} ${p.testemunha?'testemunha':''}">`;
+    html += `<td>${escHTML(String(p.plot_id))}${p.testemunha?' 🔹':''}</td>`;
+    for (let j = 1; j <= NUM_AVALIACOES; j++) {
+      const v = p[`nota${j}`] !== null ? p[`nota${j}`] : '—';
+      const cls = (g===current && colunaAtual===j) ? 'coluna-ativa' : '';
+      html += `<td class="${cls}" onclick="irParaCelula(${g},${j})">${v}</td>`;
+    }
+    html += '</tr>';
+  }
+  document.getElementById('gridBody').innerHTML = html;
+  setTimeout(() => scrollParaParcelaAtual(), 50);
+}
+
+function mudarPagina(p) {
+  paginaAtual = p; atualizarGrid(); salvarDados(); garantirFocoDigitacao();
+}
+
+function escHTML(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ========== DISPLAY NOTAS ==========
+function atualizarDisplayNotas() {
+  const c = document.getElementById('notasDisplay');
+  if (!dados.length || current >= dados.length) { c.innerHTML = ''; return; }
+  const p = dados[current];
+  let html = '';
+  for (let i = 1; i <= NUM_AVALIACOES; i++) {
+    const nota = p[`nota${i}`];
+    const val  = nota !== null ? nota : '○';
+    const cls  = i === colunaAtual ? 'active' : (nota !== null ? 'filled' : '');
+    html += `<div class="nota-individual">
+      <div class="label">A${i}</div>
+      <div class="valor ${cls}" id="nota${i}Atual">${val}</div>
+    </div>`;
+  }
+  c.innerHTML = html;
+}
+
+function atualizarTela() {
+  if (!dados.length) {
+    document.getElementById('plot').textContent = '📋 Nenhum CSV carregado';
+    document.getElementById('notasDisplay').innerHTML = '';
+    document.getElementById('gridContainer').style.display = 'none';
+    document.getElementById('gridLabel').style.display = 'none';
+    return;
+  }
+  if (current < dados.length) {
+    const p = dados[current];
+    document.getElementById('plot').innerHTML =
+      `🌿 Parcela <strong>${escHTML(String(p.plot_id))}</strong> &nbsp; ${escHTML(p.genotipo)}${p.testemunha?' <span style="color:#34C759;font-size:0.85rem;">● Testemunha</span>':''}`;
+    atualizarDisplayNotas();
+    atualizarDisplayDescricao();
+    const pc = Math.floor(current / POR_PAGINA) + 1;
+    if (pc !== paginaAtual) paginaAtual = pc;
+    atualizarGrid();
+  } else {
+    document.getElementById('plot').innerHTML = '🏁 <strong>Coleta finalizada!</strong>';
+    document.getElementById('notasDisplay').innerHTML = '<div style="font-size:2rem;margin-top:8px;">🎉</div>';
+    atualizarGrid();
+  }
+  garantirFocoDigitacao();
+}
+
+// ========== DESCRIÇÃO ==========
+function atualizarDisplayDescricao() {
+  const card = document.getElementById('descricaoCard');
+  const txt  = document.getElementById('descricaoTexto');
+  if (!card || !txt) return;
+  const desc = (dados.length && current < dados.length) ? (dados[current].descricao || '') : '';
+  txt.textContent = desc;
+  card.style.display = desc ? 'flex' : 'none';
+}
+
+function limparDescricao() {
+  if (!dados.length || current >= dados.length) return;
+  dados[current].descricao = '';
+  salvarDados();
+  atualizarDisplayDescricao();
+}
+
+// ========== FOCO ==========
+function garantirFocoDigitacao() {
+  const card = document.getElementById('manualCard');
+  if (card && card.style.display !== 'none') return;
+  fecharManual();
+}
+
+// ========== NAVEGAÇÃO ==========
+function proximaNota() {
+  if (!dados.length) return;
+  if (colunaAtual < NUM_AVALIACOES) { colunaAtual++; }
+  else if (current + 1 < dados.length) {
+    current++; colunaAtual = 1;
+    if (dados[current].testemunha) setTimeout(()=>beepTestemunha(),100);
+    setTimeout(()=>falarParcelaRapido(), 150);
+  } else { beepErro(); return; }
+  beepNavegacao(); atualizarTela(); salvarDados();
+}
+
+function voltarNota() {
+  if (!dados.length) return;
+  if (colunaAtual > 1) { colunaAtual--; }
+  else if (current > 0) { current--; colunaAtual = NUM_AVALIACOES; }
+  else { beepErro(); return; }
+  beepNavegacao(); atualizarTela(); salvarDados();
+}
+
+function pularParcela() {
+  if (!dados.length) return;
+  if (current + 1 < dados.length) {
+    current++; colunaAtual = 1; beepNavegacao();
+    if (dados[current].testemunha) setTimeout(()=>beepTestemunha(),200);
+    setTimeout(()=>falarParcelaRapido(), 150);
+    atualizarTela(); salvarDados();
+  } else { beepErro(); }
+}
+
+function irParaParcelaComVoz(numero) {
+  const idx = dados.findIndex(d => d.plot_id === numero);
+  if (idx >= 0) { current = idx; atualizarColunaAtual(); atualizarTela(); salvarDados(); beepNavegacao(); }
+  else beepErro();
+}
+
+// ========== SALVAR NOTA ==========
+function salvarNota(numero) {
+  if (!dados.length || current >= dados.length) { beepErro(); return false; }
+  const nota = Math.min(9, Math.max(1, parseInt(numero)));
+  const key  = `nota${colunaAtual}`;
+  const isCorrecao = dados[current][key] !== null;
+  dados[current][key] = nota;
+
+  if (isCorrecao) { beepCorrecao(); document.getElementById('debug').textContent = `✏️ Corrigido A${colunaAtual} = ${nota}`; }
+  else beepNota();
+
+  const el = document.getElementById(`nota${colunaAtual}Atual`);
+  if (el) { el.classList.remove('nota-pop'); void el.offsetWidth; el.classList.add('nota-pop'); }
+
+  const foiUltima = colunaAtual === NUM_AVALIACOES;
+  if (foiUltima) {
+    beepParcelaCompleta();
+    if (current + 1 < dados.length) {
+      const ant = dados[current]; current++; colunaAtual = 1;
+      if (ant.plot_id % 10 === 0) beepVira();
+      if (dados[current].testemunha) setTimeout(()=>beepTestemunha(),200);
+      setTimeout(()=>falarParcelaRapido(), 350);
+    } else { atualizarTela(); salvarDados(); return true; }
+  } else { colunaAtual++; }
+
+  atualizarTela(); salvarDados(); return true;
+}
+
+// ========== CSV ==========
+function carregarCSV() {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) return;
+  nomeCSV = file.name.replace(/\.csv$/i, '');
+  document.getElementById('fileLabel').textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const linhas = e.target.result.split(/\r?\n/);
+    const start  = linhas[0].toLowerCase().includes('plot_id') ? 1 : 0;
+    const novos  = [];
+    for (let i = start; i < linhas.length; i++) {
+      const l = linhas[i].trim(); if (!l) continue;
+      const cols = l.includes(',') ? l.split(',') : l.includes(';') ? l.split(';') : l.split(/\t/);
+      if (cols.length < 2) continue;
+      const plot_id = parseInt(cols[0]); if (isNaN(plot_id)) continue;
+      const genotipo = cols[1].trim();
+      const testemunha = cols.length >= 3 ? (cols[2].trim().toLowerCase()==='sim'||cols[2].trim()==='1') : false;
+      const novo = { plot_id, genotipo, testemunha };
+      for (let j = 1; j <= NUM_AVALIACOES; j++) novo[`nota${j}`] = null;
+      novo.descricao = '';
+      novos.push(novo);
+    }
+    if (!novos.length) { alert('CSV inválido ou sem dados'); return; }
+    dados = novos; current = 0; colunaAtual = 1; paginaAtual = 1;
+    atualizarTela(); beepNota();
+    document.getElementById('debug').textContent = `✅ ${dados.length} parcelas · ${NUM_AVALIACOES} avaliações`;
+    salvarDados(); garantirFocoDigitacao();
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function exportarCSV() {
+  if (!dados.length) { alert('Nenhum dado para exportar'); return; }
+  let cab = 'plot_id,genotipo,testemunha';
+  for (let i = 1; i <= NUM_AVALIACOES; i++) cab += `,avaliacao${i}`;
+  cab += ',descricao';
+  const csv = cab + '\n' + dados.map(d => {
+    let l = `${d.plot_id},${d.genotipo},${d.testemunha?'sim':''}`;
+    for (let i = 1; i <= NUM_AVALIACOES; i++) l += `,${d[`nota${i}`]??''}`;
+    l += `,"${(d.descricao||'').replace(/"/g,'""')}"`;
+    return l;
+  }).join('\n');
+
+  const now = new Date();
+  const ts  = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const sug = `${nomeCSV||'resultado'}_${ts}.csv`;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000;padding-bottom:env(safe-area-inset-bottom);';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-width:500px;">
+      <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 20px;"></div>
+      <p style="font-size:1rem;font-weight:700;color:#000;margin:0 0 6px;">💾 Exportar CSV</p>
+      <p style="font-size:0.72rem;color:#8E8E93;margin:0 0 14px;">Timestamp: ${ts}</p>
+      <input id="exportNome" type="text" value="${sug}"
+        style="width:100%;border:1.5px solid #E5E5EA;border-radius:12px;padding:12px 14px;font-size:0.9rem;margin-bottom:16px;-webkit-appearance:none;">
+      <div style="display:flex;gap:10px;">
+        <button id="exportCancelar" style="flex:1;background:#F2F2F7;color:#3C3C43;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:600;cursor:pointer;">Cancelar</button>
+        <button id="exportConfirmar" style="flex:2;background:#34C759;color:#fff;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:700;cursor:pointer;">Salvar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('exportConfirmar').onclick = () => {
+    let nome = document.getElementById('exportNome').value.trim() || sug;
+    if (!nome.endsWith('.csv')) nome += '.csv';
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = nome; a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(overlay); beepNota(); garantirFocoDigitacao();
+  };
+  document.getElementById('exportCancelar').onclick = () => {
+    document.body.removeChild(overlay); garantirFocoDigitacao();
+  };
+}
+
+// ========== DIGITAÇÃO MANUAL ==========
+function toggleManual() {
+  const card = document.getElementById('manualCard');
+  const aberto = card.style.display !== 'none';
+  if (aberto) {
+    fecharManual();
+  } else {
+    card.style.display = 'flex';
+    document.getElementById('btnManual')?.classList.add('ativo');
+    setTimeout(() => document.getElementById('notaDigitada')?.focus(), 100);
+  }
+}
+
+function fecharManual() {
+  const card = document.getElementById('manualCard');
+  card.style.display = 'none';
+  document.getElementById('btnManual')?.classList.remove('ativo');
+  const inp = document.getElementById('notaDigitada');
+  if (inp) { inp.value = ''; inp.blur(); }
+}
+
+function configurarDigitacao() {
+  let inp = document.getElementById('notaDigitada');
+  const novo = inp.cloneNode(true); inp.parentNode.replaceChild(novo, inp); inp = novo;
+  inp.setAttribute('maxlength','1'); inp.setAttribute('autocomplete','off'); inp.setAttribute('inputmode','numeric');
+
+  const processar = (v) => {
+    if (!v) return;
+    const n = parseInt(v.replace(/[^1-9]/g,'').charAt(0));
+    if (n >= 1 && n <= 9 && dados.length && current < dados.length) {
+      salvarNota(n);
+      setTimeout(() => { inp.value = ''; inp.focus(); }, 50);
+    } else { inp.value = ''; }
+  };
+
+  inp.addEventListener('input', e => { if(e.target.value.length>0) processar(e.target.value); });
+
+  inp.addEventListener('keydown', e => {
+    if (['Backspace','Delete','Tab','ArrowLeft','ArrowRight'].includes(e.key)) return;
+    if (e.key>='1' && e.key<='9') {
+      e.preventDefault();
+      if (dados.length && current<dados.length) { salvarNota(parseInt(e.key)); setTimeout(()=>{ inp.value=''; inp.focus(); },50); }
+    } else if (e.key === 'Escape') {
+      fecharManual();
+    } else { e.preventDefault(); beepErro(); }
+  });
+
+  inp.addEventListener('paste', e => { e.preventDefault(); processar((e.clipboardData||window.clipboardData).getData('text')); });
+}
+
+// ========== API PÚBLICA ==========
+function startRecognition()    { VozEngine.iniciar(); }
+function stopRecognition()     { VozEngine.parar(); }
+
+window.carregarCSV           = carregarCSV;
+window.startRecognition      = startRecognition;
+window.stopRecognition       = stopRecognition;
+window.exportarCSV           = exportarCSV;
+window.resetarExperimento    = resetarExperimento;
+window.mudarPagina           = mudarPagina;
+window.setNumAvaliacoes      = setNumAvaliacoes;
+window.irParaCelula          = irParaCelula;
+window.pularParcela          = pularParcela;
+window.garantirFocoDigitacao = garantirFocoDigitacao;
+window.solicitarPermissao    = solicitarPermissao;
+
+// ========== INICIALIZAÇÃO ==========
+window.addEventListener('load', () => {
+  atualizarBadgeModo();
+  atualizarToggleRede();
+  configurarDigitacao();
+  carregarDados();
+  setTimeout(()=>garantirFocoDigitacao(), 300);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(()=>console.log('SW registrado'))
+      .catch(e=>console.warn('SW:', e));
+  }
+});
+</script>
+</body>
+</html>
