@@ -718,6 +718,10 @@ let modoOnline = navigator.onLine;
 let ultimoComandoVoz = '';
 let ultimoComandoVozEm = 0;
 const JANELA_DEDUP_VOZ_MS = 900;
+let ultimoTokenAcaoVoz = '';
+let ultimoTokenAcaoVozEm = 0;
+const JANELA_DEDUP_NOTA_VOZ_MS = 1600;
+const JANELA_TRAVA_NOTA_VOZ_MS = 450;
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -728,9 +732,50 @@ function normalizarTextoVoz(texto) {
     .trim();
 }
 
+function extrairNotaVoz(raw) {
+  if (raw.includes('parcela')) return null;
+
+  const digito = raw.match(/\b([1-9])\b/);
+  if (digito) return parseInt(digito[1], 10);
+
+  const notasPorExtenso = [
+    [/\bum\b|\buma\b|\bhum\b/, 1],
+    [/\bdois\b|\bduas\b/, 2],
+    [/\btres\b/, 3],
+    [/\bquatro\b/, 4],
+    [/\bcinco\b/, 5],
+    [/\bseis\b/, 6],
+    [/\bsete\b/, 7],
+    [/\boito\b/, 8],
+    [/\bnove\b/, 9]
+  ];
+
+  for (const [re, n] of notasPorExtenso) {
+    if (re.test(raw)) return n;
+  }
+
+  return null;
+}
+
+function tokenAcaoVoz(raw) {
+  if (modoDescricao) return 'descricao:conteudo';
+  if (raw.includes('descricao')) return 'cmd:descricao';
+  if (raw.includes('pular parcela') || raw.includes('proxima parcela') || raw.includes('avancar parcela')) return 'cmd:pular-parcela';
+  if (raw.includes('proxima') || raw.includes('proximo')) return 'cmd:proxima';
+  if (raw.includes('voltar') || raw.includes('volta') || raw.includes('anterior')) return 'cmd:voltar';
+  if (raw.includes('parcela atual')) return 'cmd:parcela-atual';
+  if (raw.includes('parcela')) return `cmd:parcela-${raw.match(/\d+/)?.[0] || ''}`;
+
+  const nota = extrairNotaVoz(raw);
+  if (nota !== null) return `nota:${nota}`;
+
+  return `txt:${raw}`;
+}
+
 function receberComandoVoz(texto) {
   const normalizado = normalizarTextoVoz(texto);
   const agora = Date.now();
+  const token = tokenAcaoVoz(normalizado);
 
   if (
     normalizado &&
@@ -741,14 +786,36 @@ function receberComandoVoz(texto) {
     return;
   }
 
+  if (
+    token.startsWith('nota:') &&
+    token === ultimoTokenAcaoVoz &&
+    agora - ultimoTokenAcaoVozEm < JANELA_DEDUP_NOTA_VOZ_MS
+  ) {
+    document.getElementById('debug').textContent = `🔁 nota repetida ignorada: "${texto}"`;
+    return;
+  }
+
+  if (
+    token.startsWith('nota:') &&
+    ultimoTokenAcaoVoz.startsWith('nota:') &&
+    agora - ultimoTokenAcaoVozEm < JANELA_TRAVA_NOTA_VOZ_MS
+  ) {
+    document.getElementById('debug').textContent = `🔒 nota muito próxima ignorada: "${texto}"`;
+    return;
+  }
+
   ultimoComandoVoz = normalizado;
   ultimoComandoVozEm = agora;
+  ultimoTokenAcaoVoz = token;
+  ultimoTokenAcaoVozEm = agora;
   processarComando(texto);
 }
 
 function limparDedupVoz() {
   ultimoComandoVoz = '';
   ultimoComandoVozEm = 0;
+  ultimoTokenAcaoVoz = '';
+  ultimoTokenAcaoVozEm = 0;
 }
 
 window.addEventListener('online', () => {
@@ -953,29 +1020,10 @@ function processarComando(texto) {
     }
   }
 
-  const digito = raw.match(/\b([1-9])\b/);
-  if (digito) {
-    salvarNota(parseInt(digito[1], 10));
+  const nota = extrairNotaVoz(raw);
+  if (nota !== null) {
+    salvarNota(nota);
     return;
-  }
-
-  const ext = [
-    [/\bum\b|\buma\b|\bhum\b/, 1],
-    [/\bdois\b|\bduas\b/, 2],
-    [/\btres\b/, 3],
-    [/\bquatro\b/, 4],
-    [/\bcinco\b/, 5],
-    [/\bseis\b/, 6],
-    [/\bsete\b/, 7],
-    [/\boito\b/, 8],
-    [/\bnove\b/, 9]
-  ];
-
-  for (const [re, n] of ext) {
-    if (re.test(raw)) {
-      salvarNota(n);
-      return;
-    }
   }
 }
 
