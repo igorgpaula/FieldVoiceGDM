@@ -1,0 +1,21 @@
+{
+  "name": "Field Voice Multi Off",
+  "short_name": "FieldVoice",
+  "start_url": "./",
+  "display": "standalone",
+  "description": "Note taking app",
+  "background_color": "#1a472a",
+  "theme_color": "#1a472a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
