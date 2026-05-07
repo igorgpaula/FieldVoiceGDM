@@ -515,7 +515,7 @@ input[type="file"] { display: none; }
   <div class="status-card">
     <div class="status-dot" id="statusDot"></div>
     <span id="status">Parado</span>
-    <span class="status-hint">próxima · voltar<br>pular parcela · 1-9</span>
+    <span class="status-hint">offline: 1 fala<br>online: contínuo</span>
   </div>
 
   <div class="debug-pill">🧠 <span id="debug">Aguardando CSV...</span></div>
@@ -728,7 +728,7 @@ let origemComandoAtual = '';
 let ultimaNotaVozGravadaEm = 0;
 let ultimaNotaVozGravadaValor = null;
 const JANELA_GRAVACAO_NOTA_VOZ_MS = 3200;
-const APP_VERSION = '2026-05-06-voz-lock-3';
+const APP_VERSION = '2026-05-06-offline-oneshot-1';
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -874,6 +874,98 @@ function atualizarToggleRede() {
 }
 
 const VozEngine = {
+  async iniciarOfflineUmaFala() {
+    limparDedupVoz();
+    ativo = true;
+    rodando = true;
+    setStatusVoz(true);
+    document.getElementById('status').textContent = '🎙️ fale uma nota...';
+
+    try {
+      if (isNative()) {
+        const plugin = window.Capacitor?.Plugins?.SpeechRecognition;
+        if (!plugin) {
+          document.getElementById('debug').textContent = '❌ Plugin não encontrado';
+          beepErro();
+          return;
+        }
+
+        const perm = await plugin.checkPermissions();
+        if (perm.speechRecognition !== 'granted') {
+          const req = await plugin.requestPermissions();
+          if (req.speechRecognition !== 'granted') {
+            document.getElementById('debug').textContent = '❌ Permissão negada';
+            beepErro();
+            return;
+          }
+        }
+
+        const res = await plugin.start({
+          language: 'pt-BR',
+          maxResults: 1,
+          partialResults: false,
+          popup: false
+        });
+        await plugin.stop().catch(() => {});
+
+        const txt = res?.matches?.[0];
+        if (txt) {
+          document.getElementById('debug').textContent = `"${txt}"`;
+          receberComandoVoz(txt.toLowerCase());
+        } else {
+          document.getElementById('debug').textContent = '⚠️ Nada reconhecido';
+          beepErro();
+        }
+      } else {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+          alert('Navegador sem suporte a voz');
+          return;
+        }
+
+        await new Promise((resolve) => {
+          const rec = new SR();
+          let finalizou = false;
+
+          const finalizar = () => {
+            if (finalizou) return;
+            finalizou = true;
+            try { rec.stop(); } catch (e) {}
+            resolve();
+          };
+
+          rec.lang = 'pt-BR';
+          rec.continuous = false;
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+          rec.onresult = (e) => {
+            const txt = e.results?.[0]?.[0]?.transcript || '';
+            if (txt) {
+              document.getElementById('debug').textContent = `"${txt}"`;
+              receberComandoVoz(txt.toLowerCase());
+            }
+            finalizar();
+          };
+          rec.onerror = () => {
+            document.getElementById('debug').textContent = '⚠️ Nada reconhecido';
+            beepErro();
+            finalizar();
+          };
+          rec.onend = finalizar;
+          rec.start();
+        });
+      }
+    } catch (e) {
+      document.getElementById('debug').textContent = '⚠️ Erro ao ouvir uma fala';
+      beepErro();
+    } finally {
+      ativo = false;
+      rodando = false;
+      setStatusVoz(false);
+      document.getElementById('status').textContent = 'Parado';
+    }
+  },
+
   async _loopNativo() {
     const plugin = window.Capacitor.Plugins.SpeechRecognition;
     rodando = true;
@@ -992,6 +1084,10 @@ const VozEngine = {
     if (!dados.length) {
       beepErro();
       document.getElementById('debug').textContent = '⚠️ Carregue um CSV primeiro';
+      return;
+    }
+    if (!modoOnline) {
+      this.iniciarOfflineUmaFala();
       return;
     }
     if (isNative()) this.iniciarNativo();
