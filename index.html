@@ -507,15 +507,15 @@ input[type="file"] { display: none; }
   </div>
 
   <div class="input-card" id="manualCard" style="display:none;">
-    <span class="input-label">⌨️ Nota 1-9</span>
-    <input type="text" id="notaDigitada" inputmode="numeric" pattern="[1-9]" placeholder="-" autocomplete="off">
+    <span class="input-label">⌨️ Nota 0-10</span>
+    <input type="text" id="notaDigitada" inputmode="numeric" pattern="10|[0-9]" placeholder="-" autocomplete="off">
   </div>
 
   <p class="section-label">Reconhecimento de voz</p>
   <div class="status-card">
     <div class="status-dot" id="statusDot"></div>
     <span id="status">Parado</span>
-    <span class="status-hint">online: voz contínua<br>offline: teclado</span>
+    <span class="status-hint">nota 0-10<br>offline: teclado</span>
   </div>
 
   <div class="debug-pill">🧠 <span id="debug">Aguardando CSV...</span></div>
@@ -650,13 +650,19 @@ function beepVira() { beep(600,100); setTimeout(()=>beep(900,100),100); setTimeo
 function beepTestemunha() { beep(500,150); setTimeout(()=>beep(700,150),150); vibrar([40,40]); }
 function beepNavegacao() { beep(700,80); vibrar(30); }
 function beepErro() { beep(300,250); vibrar([80,60,80]); }
+function beepOffline() {
+  beep(1000, 180);
+  setTimeout(() => beep(520, 260), 220);
+  setTimeout(() => beep(260, 420), 540);
+  vibrar([180, 80, 180, 80, 260]);
+}
 function beepParcelaCompleta() {
   beep(880, 180);
   setTimeout(() => beep(780, 180), 220);
   setTimeout(() => beep(660, 320), 440);
 }
 
-function _falarWeb(frase, rate = 0.95) {
+function _falarWeb(frase, rate = 1.25) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(frase);
@@ -665,8 +671,18 @@ function _falarWeb(frase, rate = 0.95) {
   window.speechSynthesis.speak(utt);
 }
 
-function falarTexto(frase, rate = 0.95) {
+function falarTexto(frase, rate = 1.25) {
   if (!modoOnline) return;
+  const tts = window.Capacitor?.Plugins?.TextToSpeech;
+  if (tts) {
+    tts.speak({ text: frase, lang: 'pt-BR', rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
+      .catch(() => _falarWeb(frase, rate));
+  } else {
+    _falarWeb(frase, rate);
+  }
+}
+
+function falarAvisoLocal(frase, rate = 1.35) {
   const tts = window.Capacitor?.Plugins?.TextToSpeech;
   if (tts) {
     tts.speak({ text: frase, lang: 'pt-BR', rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
@@ -688,9 +704,9 @@ function falarParcelaSeNecessario() {
   if (!dados.length || current >= dados.length || !modoOnline) return;
   const d = dados[current];
   if (d.testemunha) {
-    falarTexto(fraseParcelaAtual(d.plot_id % 10 === 0), 1.08);
+    falarTexto(fraseParcelaAtual(d.plot_id % 10 === 0), 1.28);
   } else if (d.plot_id % 10 === 0) {
-    falarTexto(`Parcela ${d.plot_id}`, 1.15);
+    falarTexto(`Parcela ${d.plot_id}`, 1.35);
   }
 }
 
@@ -700,7 +716,7 @@ function falarParcelaAtual() {
     return;
   }
   beepNavegacao();
-  falarTexto(fraseParcelaAtual(true), 0.95);
+  falarTexto(fraseParcelaAtual(true), 1.25);
 }
 
 document.body.addEventListener('click', () => {
@@ -721,7 +737,7 @@ const POR_PAGINA = 100;
 let modoDescricao = false;
 let modoOnline = navigator.onLine;
 
-const APP_VERSION = '2026-05-07-voice-navigation-1';
+const APP_VERSION = '2026-05-07-safety-notes-0-10-1';
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -735,13 +751,14 @@ function normalizarTextoVoz(texto) {
 function extrairNotaVoz(raw) {
   if (raw.includes('parcela')) return null;
 
-  const jotaNota = raw.match(/\bj\s*([1-9])\b/);
+  const jotaNota = raw.match(/\bj\s*(10|[0-9])\b/);
   if (jotaNota) return parseInt(jotaNota[1], 10);
 
-  const digito = raw.match(/\b([1-9])\b/);
-  if (digito) return parseInt(digito[1], 10);
+  const numero = raw.match(/\b(\d{1,3})\b/);
+  if (numero) return parseInt(numero[1], 10);
 
   const notasPorExtenso = [
+    [/\bzero\b/, 0],
     [/\bum\b|\buma\b|\bhum\b/, 1],
     [/\bdois\b|\bduas\b/, 2],
     [/\btres\b/, 3],
@@ -750,7 +767,8 @@ function extrairNotaVoz(raw) {
     [/\bseis\b/, 6],
     [/\bsete\b/, 7],
     [/\boito\b/, 8],
-    [/\bnove\b/, 9]
+    [/\bnove\b/, 9],
+    [/\bdez\b/, 10]
   ];
 
   for (const [re, n] of notasPorExtenso) {
@@ -779,11 +797,18 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
   modoOnline = false;
   atualizarToggleRede();
+  beepOffline();
+  falarAvisoLocal('Offline. Use teclado.', 1.35);
   setTimeout(() => {
     if (rodando) VozEngine.parar();
     document.getElementById('status').textContent = 'Offline: teclado';
     document.getElementById('debug').textContent = '📴 Conexão perdida: use o teclado manual';
   }, 0);
+});
+
+window.addEventListener('pagehide', () => salvarDados());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') salvarDados();
 });
 
 function toggleRede() {
@@ -1286,8 +1311,10 @@ function irParaParcelaComVoz(numero) {
     atualizarTela();
     salvarDados();
     beepNavegacao();
+    falarTexto(`Entendi. ${fraseParcelaAtual(true)}`, 1.28);
   } else {
     beepErro();
+    falarTexto(`Parcela ${numero} não encontrada`, 1.28);
   }
 }
 
@@ -1297,7 +1324,14 @@ function salvarNota(numero) {
     return false;
   }
 
-  const nota = Math.min(9, Math.max(1, parseInt(numero, 10)));
+  const nota = parseInt(numero, 10);
+  if (!Number.isInteger(nota) || nota < 0 || nota > 10) {
+    beepErro();
+    falarAvisoLocal('Não válido', 1.35);
+    document.getElementById('debug').textContent = `❌ Nota não válida: ${numero}`;
+    return false;
+  }
+
   const key = `nota${colunaAtual}`;
   const isCorrecao = dados[current][key] !== null;
   dados[current][key] = nota;
@@ -1480,20 +1514,45 @@ function configurarDigitacao() {
   const novo = inp.cloneNode(true);
   inp.parentNode.replaceChild(novo, inp);
   inp = novo;
-  inp.setAttribute('maxlength', '1');
+  inp.setAttribute('maxlength', '2');
   inp.setAttribute('autocomplete', 'off');
   inp.setAttribute('inputmode', 'numeric');
+  let timerNotaUm = null;
 
   const processar = (v) => {
+    if (timerNotaUm) {
+      clearTimeout(timerNotaUm);
+      timerNotaUm = null;
+    }
     if (!v) return;
-    const n = parseInt(v.replace(/[^1-9]/g, '').charAt(0), 10);
-    if (n >= 1 && n <= 9 && dados.length && current < dados.length) {
+    const limpo = v.replace(/\D/g, '').slice(0, 2);
+    if (!limpo) {
+      inp.value = '';
+      return;
+    }
+    inp.value = limpo;
+
+    if (limpo === '1') {
+      timerNotaUm = setTimeout(() => {
+        if (inp.value === '1' && dados.length && current < dados.length) {
+          salvarNota(1);
+          inp.value = '';
+          inp.focus();
+        }
+        timerNotaUm = null;
+      }, 450);
+      return;
+    }
+
+    const n = parseInt(limpo, 10);
+    if (n >= 0 && n <= 10 && dados.length && current < dados.length) {
       salvarNota(n);
       setTimeout(() => {
         inp.value = '';
         inp.focus();
       }, 50);
     } else {
+      beepErro();
       inp.value = '';
     }
   };
@@ -1504,15 +1563,8 @@ function configurarDigitacao() {
 
   inp.addEventListener('keydown', e => {
     if (['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-    if (e.key >= '1' && e.key <= '9') {
-      e.preventDefault();
-      if (dados.length && current < dados.length) {
-        salvarNota(parseInt(e.key, 10));
-        setTimeout(() => {
-          inp.value = '';
-          inp.focus();
-        }, 50);
-      }
+    if (e.key >= '0' && e.key <= '9') {
+      return;
     } else if (e.key === 'Escape') {
       fecharManual();
     } else {
