@@ -525,6 +525,21 @@ input[type="file"] { display: none; }
     </div>
   </div>
 
+  <p class="section-label">Idioma</p>
+  <div class="ios-card">
+    <div class="range-row" style="grid-template-columns:1fr;">
+      <div class="range-field">
+        <label for="idiomaSelect">Voz e retorno</label>
+        <select id="idiomaSelect" onchange="setIdiomaApp()"
+          style="width:100%;border:1.5px solid var(--sep);border-radius:12px;padding:12px 10px;font-size:1rem;font-weight:800;color:var(--label);background:#fff;">
+          <option value="pt">Português</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
   <p class="section-label">Faixa de notas</p>
   <div class="ios-card">
     <div class="range-row">
@@ -727,7 +742,7 @@ function _falarWeb(frase, rate = 1.25) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(frase);
-  utt.lang = 'pt-BR';
+  utt.lang = cfgIdioma().speech;
   utt.rate = rate;
   window.speechSynthesis.speak(utt);
 }
@@ -736,7 +751,7 @@ function falarTexto(frase, rate = 1.25) {
   if (!modoOnline) return;
   const tts = window.Capacitor?.Plugins?.TextToSpeech;
   if (tts) {
-    tts.speak({ text: frase, lang: 'pt-BR', rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
+    tts.speak({ text: frase, lang: cfgIdioma().speech, rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
       .catch(() => _falarWeb(frase, rate));
   } else {
     _falarWeb(frase, rate);
@@ -746,7 +761,7 @@ function falarTexto(frase, rate = 1.25) {
 function falarAvisoLocal(frase, rate = 1.35) {
   const tts = window.Capacitor?.Plugins?.TextToSpeech;
   if (tts) {
-    tts.speak({ text: frase, lang: 'pt-BR', rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
+    tts.speak({ text: frase, lang: cfgIdioma().speech, rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
       .catch(() => _falarWeb(frase, rate));
   } else {
     _falarWeb(frase, rate);
@@ -756,8 +771,9 @@ function falarAvisoLocal(frase, rate = 1.35) {
 function fraseParcelaAtual(incluirParcela = true) {
   const d = dados[current];
   const partes = [];
-  if (incluirParcela) partes.push(`Parcela ${d.plot_id}`);
-  if (d.testemunha) partes.push(`Testemunha, genótipo ${d.genotipo}`);
+  const c = cfgIdioma();
+  if (incluirParcela) partes.push(`${c.plot} ${d.plot_id}`);
+  if (d.testemunha) partes.push(`${c.witness} ${d.genotipo}`);
   return partes.join('. ');
 }
 
@@ -767,7 +783,7 @@ function falarParcelaSeNecessario() {
   if (d.testemunha) {
     falarTexto(fraseParcelaAtual(d.plot_id % 10 === 0), 1.28);
   } else if (d.plot_id % 10 === 0) {
-    falarTexto(`Parcela ${d.plot_id}`, 1.35);
+    falarTexto(`${cfgIdioma().plot} ${d.plot_id}`, 1.35);
   }
 }
 
@@ -799,8 +815,77 @@ let modoDescricao = false;
 let modoOnline = navigator.onLine;
 let NOTA_MIN = 0;
 let NOTA_MAX = 10;
+let IDIOMA_APP = 'pt';
 
-const APP_VERSION = '2026-05-07-configurable-note-range-1';
+const APP_VERSION = '2026-05-07-language-select-1';
+
+const IDIOMAS = {
+  pt: {
+    html: 'pt-BR',
+    speech: 'pt-BR',
+    confirm: 'Entendi.',
+    plot: 'Parcela',
+    witness: 'Testemunha, genótipo',
+    notFound: n => `Parcela ${n} não encontrada`,
+    invalid: 'Não válido',
+    offline: 'Offline. Use teclado.',
+    rangeSet: 'Faixa de notas',
+    commands: {
+      currentPlot: ['parcela atual', 'qual parcela', 'que parcela', 'parcela tal'],
+      skipPlot: ['pular parcela', 'proxima parcela', 'avancar parcela'],
+      next: ['proxima', 'proximo', 'pular', 'pula'],
+      back: ['voltar', 'volta', 'anterior'],
+      description: ['descricao'],
+      plotWords: ['parcela']
+    }
+  },
+  en: {
+    html: 'en-US',
+    speech: 'en-US',
+    confirm: 'Got it.',
+    plot: 'Plot',
+    witness: 'Check, genotype',
+    notFound: n => `Plot ${n} not found`,
+    invalid: 'Not valid',
+    offline: 'Offline. Use keyboard.',
+    rangeSet: 'Note range',
+    commands: {
+      currentPlot: ['current plot', 'which plot', 'what plot'],
+      skipPlot: ['skip plot', 'next plot', 'advance plot'],
+      next: ['next', 'skip', 'advance'],
+      back: ['back', 'previous'],
+      description: ['description', 'note comment', 'comment'],
+      plotWords: ['plot']
+    }
+  },
+  es: {
+    html: 'es-ES',
+    speech: 'es-ES',
+    confirm: 'Entendido.',
+    plot: 'Parcela',
+    witness: 'Testigo, genotipo',
+    notFound: n => `Parcela ${n} no encontrada`,
+    invalid: 'No válido',
+    offline: 'Sin conexión. Use teclado.',
+    rangeSet: 'Rango de notas',
+    commands: {
+      currentPlot: ['parcela actual', 'cual parcela', 'que parcela'],
+      skipPlot: ['saltar parcela', 'siguiente parcela', 'avanzar parcela'],
+      next: ['siguiente', 'proximo', 'proxima', 'saltar', 'salta', 'avanzar'],
+      back: ['volver', 'atras', 'anterior'],
+      description: ['descripcion', 'comentario'],
+      plotWords: ['parcela']
+    }
+  }
+};
+
+function cfgIdioma() {
+  return IDIOMAS[IDIOMA_APP] || IDIOMAS.pt;
+}
+
+function incluiAlgum(raw, termos) {
+  return termos.some(t => raw.includes(t));
+}
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -829,6 +914,20 @@ function atualizarUIFaixaNotas() {
   }
 }
 
+function atualizarUIIdioma() {
+  const sel = document.getElementById('idiomaSelect');
+  if (sel) sel.value = IDIOMA_APP;
+  document.documentElement.lang = cfgIdioma().html;
+}
+
+function setIdiomaApp() {
+  const sel = document.getElementById('idiomaSelect');
+  IDIOMA_APP = IDIOMAS[sel?.value] ? sel.value : 'pt';
+  atualizarUIIdioma();
+  salvarDados();
+  document.getElementById('debug').textContent = `✅ Idioma: ${cfgIdioma().speech}`;
+}
+
 function setFaixaNotas() {
   const minInp = document.getElementById('notaMinInput');
   const maxInp = document.getElementById('notaMaxInput');
@@ -845,7 +944,7 @@ function setFaixaNotas() {
   NOTA_MAX = max;
   atualizarUIFaixaNotas();
   salvarDados();
-  document.getElementById('debug').textContent = `✅ Faixa de notas: ${NOTA_MIN}-${NOTA_MAX}`;
+  document.getElementById('debug').textContent = `✅ ${cfgIdioma().rangeSet}: ${NOTA_MIN}-${NOTA_MAX}`;
 }
 
 function numeroPortuguesParaInteiro(texto) {
@@ -854,22 +953,44 @@ function numeroPortuguesParaInteiro(texto) {
     cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, onze: 11,
     doze: 12, treze: 13, catorze: 14, quatorze: 14, quinze: 15,
     dezesseis: 16, dezaseis: 16, dezessete: 17, dezasete: 17,
-    dezoito: 18, dezenove: 19, dezanove: 19
+    dezoito: 18, dezenove: 19, dezanove: 19,
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
+    eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+    fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+    nineteen: 19,
+    cero: 0, uno: 1, un: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5,
+    seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11,
+    doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16,
+    diecisiete: 17, dieciocho: 18, diecinueve: 19
   };
   const dezenas = {
     vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cincoenta: 50,
-    sessenta: 60, setenta: 70, oitenta: 80, noventa: 90
+    sessenta: 60, setenta: 70, oitenta: 80, noventa: 90,
+    twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60,
+    seventy: 70, eighty: 80, ninety: 90,
+    veinte: 20, treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60,
+    setenta: 70, ochenta: 80, noventa: 90,
+    veintiuno: 21, veintidos: 22, veintitres: 23, veinticuatro: 24,
+    veinticinco: 25, veintiseis: 26, veintisiete: 27, veintiocho: 28,
+    veintinueve: 29
   };
   const centenas = {
     cem: 100, cento: 100, duzentos: 200, duzentas: 200, trezentos: 300,
     trezentas: 300, quatrocentos: 400, quatrocentas: 400, quinhentos: 500,
     quinhentas: 500, seiscentos: 600, seiscentas: 600, setecentos: 700,
     setecentas: 700, oitocentos: 800, oitocentas: 800, novecentos: 900,
-    novecentas: 900
+    novecentas: 900,
+    hundred: 100,
+    cien: 100, ciento: 100, doscientos: 200, doscientas: 200,
+    trescientos: 300, trescientas: 300, cuatrocientos: 400,
+    cuatrocientas: 400, quinientos: 500, quinientas: 500,
+    seiscientos: 600, seiscientas: 600, setecientos: 700,
+    setecientas: 700, ochocientos: 800, ochocientas: 800,
+    novecientos: 900, novecientas: 900
   };
 
   const palavras = normalizarTextoVoz(texto)
-    .replace(/\bparcela\b/g, ' ')
+    .replace(/\bparcela\b|\bplot\b/g, ' ')
     .replace(/\bnumero\b/g, ' ')
     .replace(/\bnumeros\b/g, ' ')
     .replace(/[^\w\s]/g, ' ')
@@ -881,7 +1002,7 @@ function numeroPortuguesParaInteiro(texto) {
   let viuNumero = false;
 
   for (const p of palavras) {
-    if (p === 'e' || p === 'de' || p === 'da' || p === 'do') continue;
+    if (p === 'e' || p === 'de' || p === 'da' || p === 'do' || p === 'and' || p === 'y') continue;
     if (/^\d+$/.test(p)) {
       grupo += parseInt(p, 10);
       viuNumero = true;
@@ -897,12 +1018,17 @@ function numeroPortuguesParaInteiro(texto) {
       viuNumero = true;
       continue;
     }
+    if (p === 'hundred' && grupo > 0 && grupo < 10) {
+      grupo *= 100;
+      viuNumero = true;
+      continue;
+    }
     if (centenas[p] !== undefined) {
       grupo += centenas[p];
       viuNumero = true;
       continue;
     }
-    if (p === 'mil' || p === 'milhar' || p === 'milhares') {
+    if (p === 'mil' || p === 'milhar' || p === 'milhares' || p === 'thousand') {
       total += (grupo || 1) * 1000;
       grupo = 0;
       viuNumero = true;
@@ -913,7 +1039,9 @@ function numeroPortuguesParaInteiro(texto) {
 }
 
 function extrairNumeroParcela(raw) {
-  const depoisDeParcela = raw.replace(/^.*?\bparcela\b/, '').trim();
+  const palavrasParcela = cfgIdioma().commands.plotWords.join('|');
+  const reParcela = new RegExp(`^.*?\\b(${palavrasParcela})\\b`);
+  const depoisDeParcela = raw.replace(reParcela, '').trim();
   const digitos = depoisDeParcela.match(/\b\d+\b/g);
   const palavras = depoisDeParcela
     .replace(/[^\w\s]/g, ' ')
@@ -931,7 +1059,7 @@ function extrairNumeroParcela(raw) {
 }
 
 function extrairNotaVoz(raw) {
-  if (raw.includes('parcela')) return null;
+  if (incluiAlgum(raw, cfgIdioma().commands.plotWords)) return null;
 
   const jotaNota = raw.match(/\bj\s*(\d{1,4})\b/);
   if (jotaNota) return parseInt(jotaNota[1], 10);
@@ -983,11 +1111,11 @@ window.addEventListener('offline', () => {
   modoOnline = false;
   atualizarToggleRede();
   beepOffline();
-  falarAvisoLocal('Offline. Use teclado.', 1.35);
+  falarAvisoLocal(cfgIdioma().offline, 1.35);
   setTimeout(() => {
     if (rodando) VozEngine.parar();
     document.getElementById('status').textContent = 'Offline: teclado';
-    document.getElementById('debug').textContent = '📴 Conexão perdida: use o teclado manual';
+    document.getElementById('debug').textContent = `📴 ${cfgIdioma().offline}`;
   }, 0);
 });
 
@@ -1019,7 +1147,7 @@ const VozEngine = {
     while (ativo) {
       try {
         const res = await plugin.start({
-          language: 'pt-BR',
+          language: cfgIdioma().speech,
           maxResults: 1,
           partialResults: false,
           popup: false
@@ -1080,7 +1208,7 @@ const VozEngine = {
     }
 
     this._webRec = new SR();
-    this._webRec.lang = 'pt-BR';
+    this._webRec.lang = cfgIdioma().speech;
     this._webRec.continuous = true;
     ativo = true;
     limparDedupVoz();
@@ -1147,6 +1275,7 @@ const VozEngine = {
 
 function processarComando(texto) {
   const raw = normalizarTextoVoz(texto);
+  const comandos = cfgIdioma().commands;
 
   if (modoDescricao) {
     modoDescricao = false;
@@ -1160,7 +1289,7 @@ function processarComando(texto) {
     return;
   }
 
-  if (raw.includes('descricao')) {
+  if (incluiAlgum(raw, comandos.description)) {
     if (!dados.length || current >= dados.length) {
       beepErro();
       return;
@@ -1173,32 +1302,24 @@ function processarComando(texto) {
   }
 
   if (
-    raw.includes('parcela atual') ||
-    raw.includes('qual parcela') ||
-    raw.includes('que parcela') ||
-    raw.includes('parcela tal')
+    incluiAlgum(raw, comandos.currentPlot)
   ) {
     falarParcelaAtual();
     return;
   }
-  if (raw.includes('pular parcela') || raw.includes('proxima parcela') || raw.includes('avancar parcela')) {
+  if (incluiAlgum(raw, comandos.skipPlot)) {
     pularParcela();
     return;
   }
-  if (
-    raw.includes('proxima') ||
-    raw.includes('proximo') ||
-    raw.includes('pular') ||
-    raw.includes('pula')
-  ) {
+  if (incluiAlgum(raw, comandos.next)) {
     proximaNota();
     return;
   }
-  if (raw.includes('voltar') || raw.includes('volta') || raw.includes('anterior')) {
+  if (incluiAlgum(raw, comandos.back)) {
     voltarNota();
     return;
   }
-  if (raw.includes('parcela')) {
+  if (incluiAlgum(raw, comandos.plotWords)) {
     const numeroParcela = extrairNumeroParcela(raw);
     if (numeroParcela !== null) {
       irParaParcelaComVoz(numeroParcela);
@@ -1237,7 +1358,8 @@ function salvarDados() {
       paginaAtual,
       numAvaliacoes: NUM_AVALIACOES,
       notaMin: NOTA_MIN,
-      notaMax: NOTA_MAX
+      notaMax: NOTA_MAX,
+      idioma: IDIOMA_APP
     }));
   } catch (e) {}
 }
@@ -1249,7 +1371,9 @@ function carregarDados() {
     const e = JSON.parse(s);
     if (Number.isInteger(e.notaMin)) NOTA_MIN = e.notaMin;
     if (Number.isInteger(e.notaMax)) NOTA_MAX = e.notaMax;
+    if (IDIOMAS[e.idioma]) IDIOMA_APP = e.idioma;
     if (NOTA_MIN > NOTA_MAX) [NOTA_MIN, NOTA_MAX] = [NOTA_MAX, NOTA_MIN];
+    atualizarUIIdioma();
     atualizarUIFaixaNotas();
 
     if (e.dados?.length) {
@@ -1502,10 +1626,10 @@ function irParaParcelaComVoz(numero) {
     atualizarTela();
     salvarDados();
     beepNavegacao();
-    falarTexto(`Entendi. ${fraseParcelaAtual(true)}`, 1.28);
+    falarTexto(`${cfgIdioma().confirm} ${fraseParcelaAtual(true)}`, 1.28);
   } else {
     beepErro();
-    falarTexto(`Parcela ${numero} não encontrada`, 1.28);
+    falarTexto(cfgIdioma().notFound(numero), 1.28);
   }
 }
 
@@ -1518,7 +1642,7 @@ function salvarNota(numero) {
   const nota = parseInt(numero, 10);
   if (!Number.isInteger(nota) || nota < NOTA_MIN || nota > NOTA_MAX) {
     beepErro();
-    falarAvisoLocal('Não válido', 1.35);
+    falarAvisoLocal(cfgIdioma().invalid, 1.35);
     document.getElementById('debug').textContent = `❌ Nota não válida: ${numero} · faixa ${NOTA_MIN}-${NOTA_MAX}`;
     return false;
   }
@@ -1803,6 +1927,7 @@ window.resetarExperimento = resetarExperimento;
 window.mudarPagina = mudarPagina;
 window.setNumAvaliacoes = setNumAvaliacoes;
 window.setFaixaNotas = setFaixaNotas;
+window.setIdiomaApp = setIdiomaApp;
 window.irParaCelula = irParaCelula;
 window.pularParcela = pularParcela;
 window.garantirFocoDigitacao = garantirFocoDigitacao;
@@ -1814,6 +1939,8 @@ window.limparDescricao = limparDescricao;
 window.addEventListener('load', () => {
   atualizarBadgeModo();
   atualizarToggleRede();
+  atualizarUIIdioma();
+  atualizarUIFaixaNotas();
   configurarDigitacao();
   carregarDados();
   document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
