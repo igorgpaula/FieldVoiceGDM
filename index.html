@@ -737,7 +737,7 @@ const POR_PAGINA = 100;
 let modoDescricao = false;
 let modoOnline = navigator.onLine;
 
-const APP_VERSION = '2026-05-07-safety-notes-0-10-1';
+const APP_VERSION = '2026-05-07-parcela-extenso-1';
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -746,6 +746,88 @@ function normalizarTextoVoz(texto) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function numeroPortuguesParaInteiro(texto) {
+  const unidades = {
+    zero: 0, um: 1, uma: 1, hum: 1, dois: 2, duas: 2, tres: 3, quatro: 4,
+    cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, onze: 11,
+    doze: 12, treze: 13, catorze: 14, quatorze: 14, quinze: 15,
+    dezesseis: 16, dezaseis: 16, dezessete: 17, dezasete: 17,
+    dezoito: 18, dezenove: 19, dezanove: 19
+  };
+  const dezenas = {
+    vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cincoenta: 50,
+    sessenta: 60, setenta: 70, oitenta: 80, noventa: 90
+  };
+  const centenas = {
+    cem: 100, cento: 100, duzentos: 200, duzentas: 200, trezentos: 300,
+    trezentas: 300, quatrocentos: 400, quatrocentas: 400, quinhentos: 500,
+    quinhentas: 500, seiscentos: 600, seiscentas: 600, setecentos: 700,
+    setecentas: 700, oitocentos: 800, oitocentas: 800, novecentos: 900,
+    novecentas: 900
+  };
+
+  const palavras = normalizarTextoVoz(texto)
+    .replace(/\bparcela\b/g, ' ')
+    .replace(/\bnumero\b/g, ' ')
+    .replace(/\bnumeros\b/g, ' ')
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  let total = 0;
+  let grupo = 0;
+  let viuNumero = false;
+
+  for (const p of palavras) {
+    if (p === 'e' || p === 'de' || p === 'da' || p === 'do') continue;
+    if (/^\d+$/.test(p)) {
+      grupo += parseInt(p, 10);
+      viuNumero = true;
+      continue;
+    }
+    if (unidades[p] !== undefined) {
+      grupo += unidades[p];
+      viuNumero = true;
+      continue;
+    }
+    if (dezenas[p] !== undefined) {
+      grupo += dezenas[p];
+      viuNumero = true;
+      continue;
+    }
+    if (centenas[p] !== undefined) {
+      grupo += centenas[p];
+      viuNumero = true;
+      continue;
+    }
+    if (p === 'mil' || p === 'milhar' || p === 'milhares') {
+      total += (grupo || 1) * 1000;
+      grupo = 0;
+      viuNumero = true;
+    }
+  }
+
+  return viuNumero ? total + grupo : null;
+}
+
+function extrairNumeroParcela(raw) {
+  const depoisDeParcela = raw.replace(/^.*?\bparcela\b/, '').trim();
+  const digitos = depoisDeParcela.match(/\b\d+\b/g);
+  const palavras = depoisDeParcela
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (digitos?.length && palavras.every(p => /^\d+$/.test(p))) {
+    return parseInt(digitos.join(''), 10);
+  }
+
+  const porExtenso = numeroPortuguesParaInteiro(depoisDeParcela);
+  if (porExtenso !== null) return porExtenso;
+
+  return digitos?.length ? parseInt(digitos.join(''), 10) : null;
 }
 
 function extrairNotaVoz(raw) {
@@ -1014,9 +1096,9 @@ function processarComando(texto) {
     return;
   }
   if (raw.includes('parcela')) {
-    const m = raw.match(/\d+/);
-    if (m) {
-      irParaParcelaComVoz(parseInt(m[0], 10));
+    const numeroParcela = extrairNumeroParcela(raw);
+    if (numeroParcela !== null) {
+      irParaParcelaComVoz(numeroParcela);
       return;
     }
   }
