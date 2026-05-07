@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="FieldVoice">
 <style>
 :root {
-  --bg: #ECEEF0;
+  --bg: #FFFFFF;
   --card: #FFFFFF;
   --nav: #163320;
   --sys-green: #2DB84B;
@@ -665,17 +665,32 @@ function _falarWeb(frase, rate = 0.95) {
   window.speechSynthesis.speak(utt);
 }
 
-function falarParcelaRapido() {
-  if (!dados.length || current >= dados.length) return;
+function falarTexto(frase, rate = 0.95) {
   if (!modoOnline) return;
-  const d = dados[current];
-  const frase = `Parcela ${d.plot_id}`;
   const tts = window.Capacitor?.Plugins?.TextToSpeech;
   if (tts) {
-    tts.speak({ text: frase, lang: 'pt-BR', rate: 1.2, pitch: 1.0, volume: 1.0, category: 'ambient' })
-      .catch(() => _falarWeb(frase, 1.2));
+    tts.speak({ text: frase, lang: 'pt-BR', rate, pitch: 1.0, volume: 1.0, category: 'ambient' })
+      .catch(() => _falarWeb(frase, rate));
   } else {
-    _falarWeb(frase, 1.2);
+    _falarWeb(frase, rate);
+  }
+}
+
+function fraseParcelaAtual(incluirParcela = true) {
+  const d = dados[current];
+  const partes = [];
+  if (incluirParcela) partes.push(`Parcela ${d.plot_id}`);
+  if (d.testemunha) partes.push(`Testemunha, genótipo ${d.genotipo}`);
+  return partes.join('. ');
+}
+
+function falarParcelaSeNecessario() {
+  if (!dados.length || current >= dados.length || !modoOnline) return;
+  const d = dados[current];
+  if (d.testemunha) {
+    falarTexto(fraseParcelaAtual(d.plot_id % 10 === 0), 1.08);
+  } else if (d.plot_id % 10 === 0) {
+    falarTexto(`Parcela ${d.plot_id}`, 1.15);
   }
 }
 
@@ -685,16 +700,7 @@ function falarParcelaAtual() {
     return;
   }
   beepNavegacao();
-  if (!modoOnline) return;
-  const d = dados[current];
-  const frase = `Parcela ${d.plot_id}`;
-  const tts = window.Capacitor?.Plugins?.TextToSpeech;
-  if (tts) {
-    tts.speak({ text: frase, lang: 'pt-BR', rate: 0.95, pitch: 1.0, volume: 1.0, category: 'ambient' })
-      .catch(() => _falarWeb(frase));
-  } else {
-    _falarWeb(frase);
-  }
+  falarTexto(fraseParcelaAtual(true), 0.95);
 }
 
 document.body.addEventListener('click', () => {
@@ -715,7 +721,7 @@ const POR_PAGINA = 100;
 let modoDescricao = false;
 let modoOnline = navigator.onLine;
 
-const APP_VERSION = '2026-05-06-online-voice-j-notes-1';
+const APP_VERSION = '2026-05-07-voice-navigation-1';
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -956,20 +962,30 @@ function processarComando(texto) {
     return;
   }
 
+  if (
+    raw.includes('parcela atual') ||
+    raw.includes('qual parcela') ||
+    raw.includes('que parcela') ||
+    raw.includes('parcela tal')
+  ) {
+    falarParcelaAtual();
+    return;
+  }
   if (raw.includes('pular parcela') || raw.includes('proxima parcela') || raw.includes('avancar parcela')) {
     pularParcela();
     return;
   }
-  if (raw.includes('proxima') || raw.includes('proximo')) {
+  if (
+    raw.includes('proxima') ||
+    raw.includes('proximo') ||
+    raw.includes('pular') ||
+    raw.includes('pula')
+  ) {
     proximaNota();
     return;
   }
   if (raw.includes('voltar') || raw.includes('volta') || raw.includes('anterior')) {
     voltarNota();
-    return;
-  }
-  if (raw.includes('parcela atual')) {
-    falarParcelaAtual();
     return;
   }
   if (raw.includes('parcela')) {
@@ -1218,7 +1234,7 @@ function proximaNota() {
     current++;
     colunaAtual = 1;
     if (dados[current].testemunha) setTimeout(() => beepTestemunha(), 100);
-    setTimeout(() => falarParcelaRapido(), 150);
+    setTimeout(() => falarParcelaSeNecessario(), 150);
   } else {
     beepErro();
     return;
@@ -1253,7 +1269,7 @@ function pularParcela() {
     colunaAtual = 1;
     beepNavegacao();
     if (dados[current].testemunha) setTimeout(() => beepTestemunha(), 200);
-    setTimeout(() => falarParcelaRapido(), 150);
+    setTimeout(() => falarParcelaSeNecessario(), 150);
     atualizarTela();
     salvarDados();
   } else {
@@ -1304,12 +1320,11 @@ function salvarNota(numero) {
   if (foiUltima) {
     beepParcelaCompleta();
     if (current + 1 < dados.length) {
-      const ant = dados[current];
       current++;
       colunaAtual = 1;
-      if (ant.plot_id % 10 === 0) beepVira();
+      if (dados[current].plot_id % 10 === 0) beepVira();
       if (dados[current].testemunha) setTimeout(() => beepTestemunha(), 200);
-      setTimeout(() => falarParcelaRapido(), 350);
+      setTimeout(() => falarParcelaSeNecessario(), 350);
     } else {
       atualizarTela();
       salvarDados();
