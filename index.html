@@ -248,6 +248,52 @@ input[type="file"] { display: none; }
   box-shadow: 0 0 0 4px rgba(0,122,255,0.15);
   background: #fff;
 }
+.range-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.range-field label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--label3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.range-field input {
+  width: 100%;
+  border: 1.5px solid var(--sep);
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--label);
+  background: #fff;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.range-field input:focus {
+  outline: none;
+  border-color: var(--sys-blue);
+  box-shadow: 0 0 0 4px rgba(0,122,255,0.12);
+}
+.manual-ok-btn {
+  background: var(--sys-blue);
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  padding: 12px 16px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: 44px;
+}
 
 .status-card {
   background: var(--card);
@@ -479,6 +525,20 @@ input[type="file"] { display: none; }
     </div>
   </div>
 
+  <p class="section-label">Faixa de notas</p>
+  <div class="ios-card">
+    <div class="range-row">
+      <div class="range-field">
+        <label for="notaMinInput">Mínima</label>
+        <input type="number" id="notaMinInput" inputmode="numeric" value="0" onchange="setFaixaNotas()">
+      </div>
+      <div class="range-field">
+        <label for="notaMaxInput">Máxima</label>
+        <input type="number" id="notaMaxInput" inputmode="numeric" value="10" onchange="setFaixaNotas()">
+      </div>
+    </div>
+  </div>
+
   <p class="section-label">Arquivo</p>
   <div class="ios-card">
     <div class="file-row">
@@ -507,15 +567,16 @@ input[type="file"] { display: none; }
   </div>
 
   <div class="input-card" id="manualCard" style="display:none;">
-    <span class="input-label">⌨️ Nota 0-10</span>
-    <input type="text" id="notaDigitada" inputmode="numeric" pattern="10|[0-9]" placeholder="-" autocomplete="off">
+    <span class="input-label">⌨️ Nota</span>
+    <input type="text" id="notaDigitada" inputmode="numeric" pattern="[0-9]*" placeholder="-" autocomplete="off">
+    <button class="manual-ok-btn" onclick="confirmarNotaManual()">OK</button>
   </div>
 
   <p class="section-label">Reconhecimento de voz</p>
   <div class="status-card">
     <div class="status-dot" id="statusDot"></div>
     <span id="status">Parado</span>
-    <span class="status-hint">nota 0-10<br>offline: teclado</span>
+    <span class="status-hint" id="rangeHint">nota configurada<br>offline: teclado</span>
   </div>
 
   <div class="debug-pill">🧠 <span id="debug">Aguardando CSV...</span></div>
@@ -736,8 +797,10 @@ let paginaAtual = 1;
 const POR_PAGINA = 100;
 let modoDescricao = false;
 let modoOnline = navigator.onLine;
+let NOTA_MIN = 0;
+let NOTA_MAX = 10;
 
-const APP_VERSION = '2026-05-07-parcela-extenso-1';
+const APP_VERSION = '2026-05-07-configurable-note-range-1';
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -746,6 +809,43 @@ function normalizarTextoVoz(texto) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function atualizarUIFaixaNotas() {
+  const minInp = document.getElementById('notaMinInput');
+  const maxInp = document.getElementById('notaMaxInput');
+  const label = document.querySelector('.input-label');
+  const hint = document.getElementById('rangeHint');
+  const notaInp = document.getElementById('notaDigitada');
+
+  if (minInp) minInp.value = NOTA_MIN;
+  if (maxInp) maxInp.value = NOTA_MAX;
+  if (label) label.textContent = `⌨️ Nota ${NOTA_MIN}-${NOTA_MAX}`;
+  if (hint) hint.innerHTML = `nota ${NOTA_MIN}-${NOTA_MAX}<br>offline: teclado`;
+  if (notaInp) {
+    notaInp.placeholder = `${NOTA_MIN}-${NOTA_MAX}`;
+    notaInp.setAttribute('maxlength', String(Math.max(String(NOTA_MIN).length, String(NOTA_MAX).length, 2)));
+    notaInp.setAttribute('pattern', '[0-9]*');
+  }
+}
+
+function setFaixaNotas() {
+  const minInp = document.getElementById('notaMinInput');
+  const maxInp = document.getElementById('notaMaxInput');
+  let min = parseInt(minInp?.value, 10);
+  let max = parseInt(maxInp?.value, 10);
+
+  if (!Number.isInteger(min)) min = 0;
+  if (!Number.isInteger(max)) max = 10;
+  min = Math.max(0, min);
+  max = Math.max(0, max);
+  if (min > max) [min, max] = [max, min];
+
+  NOTA_MIN = min;
+  NOTA_MAX = max;
+  atualizarUIFaixaNotas();
+  salvarDados();
+  document.getElementById('debug').textContent = `✅ Faixa de notas: ${NOTA_MIN}-${NOTA_MAX}`;
 }
 
 function numeroPortuguesParaInteiro(texto) {
@@ -833,11 +933,14 @@ function extrairNumeroParcela(raw) {
 function extrairNotaVoz(raw) {
   if (raw.includes('parcela')) return null;
 
-  const jotaNota = raw.match(/\bj\s*(10|[0-9])\b/);
+  const jotaNota = raw.match(/\bj\s*(\d{1,4})\b/);
   if (jotaNota) return parseInt(jotaNota[1], 10);
 
-  const numero = raw.match(/\b(\d{1,3})\b/);
+  const numero = raw.match(/\b(\d{1,4})\b/);
   if (numero) return parseInt(numero[1], 10);
+
+  const porExtenso = numeroPortuguesParaInteiro(raw);
+  if (porExtenso !== null) return porExtenso;
 
   const notasPorExtenso = [
     [/\bzero\b/, 0],
@@ -1125,7 +1228,6 @@ async function solicitarPermissao() {
 }
 
 function salvarDados() {
-  if (!dados.length) return;
   try {
     localStorage.setItem('fieldVoiceAuto', JSON.stringify({
       dados,
@@ -1133,7 +1235,9 @@ function salvarDados() {
       colunaAtual,
       nomeCSV,
       paginaAtual,
-      numAvaliacoes: NUM_AVALIACOES
+      numAvaliacoes: NUM_AVALIACOES,
+      notaMin: NOTA_MIN,
+      notaMax: NOTA_MAX
     }));
   } catch (e) {}
 }
@@ -1143,6 +1247,11 @@ function carregarDados() {
   if (!s) return false;
   try {
     const e = JSON.parse(s);
+    if (Number.isInteger(e.notaMin)) NOTA_MIN = e.notaMin;
+    if (Number.isInteger(e.notaMax)) NOTA_MAX = e.notaMax;
+    if (NOTA_MIN > NOTA_MAX) [NOTA_MIN, NOTA_MAX] = [NOTA_MAX, NOTA_MIN];
+    atualizarUIFaixaNotas();
+
     if (e.dados?.length) {
       dados = e.dados;
       current = e.current;
@@ -1407,10 +1516,10 @@ function salvarNota(numero) {
   }
 
   const nota = parseInt(numero, 10);
-  if (!Number.isInteger(nota) || nota < 0 || nota > 10) {
+  if (!Number.isInteger(nota) || nota < NOTA_MIN || nota > NOTA_MAX) {
     beepErro();
     falarAvisoLocal('Não válido', 1.35);
-    document.getElementById('debug').textContent = `❌ Nota não válida: ${numero}`;
+    document.getElementById('debug').textContent = `❌ Nota não válida: ${numero} · faixa ${NOTA_MIN}-${NOTA_MAX}`;
     return false;
   }
 
@@ -1596,10 +1705,22 @@ function configurarDigitacao() {
   const novo = inp.cloneNode(true);
   inp.parentNode.replaceChild(novo, inp);
   inp = novo;
-  inp.setAttribute('maxlength', '2');
+  inp.setAttribute('maxlength', String(Math.max(String(NOTA_MIN).length, String(NOTA_MAX).length, 2)));
   inp.setAttribute('autocomplete', 'off');
   inp.setAttribute('inputmode', 'numeric');
   let timerNotaUm = null;
+
+  const finalizar = () => {
+    if (timerNotaUm) {
+      clearTimeout(timerNotaUm);
+      timerNotaUm = null;
+    }
+    const limpo = inp.value.replace(/\D/g, '');
+    if (!limpo) return;
+    salvarNota(parseInt(limpo, 10));
+    inp.value = '';
+    inp.focus();
+  };
 
   const processar = (v) => {
     if (timerNotaUm) {
@@ -1607,19 +1728,22 @@ function configurarDigitacao() {
       timerNotaUm = null;
     }
     if (!v) return;
-    const limpo = v.replace(/\D/g, '').slice(0, 2);
+    const maxLen = Math.max(String(NOTA_MIN).length, String(NOTA_MAX).length, 2);
+    const limpo = v.replace(/\D/g, '').slice(0, maxLen);
     if (!limpo) {
       inp.value = '';
       return;
     }
     inp.value = limpo;
 
+    if (NOTA_MAX > 10 || NOTA_MIN < 0) {
+      return;
+    }
+
     if (limpo === '1') {
       timerNotaUm = setTimeout(() => {
         if (inp.value === '1' && dados.length && current < dados.length) {
-          salvarNota(1);
-          inp.value = '';
-          inp.focus();
+          finalizar();
         }
         timerNotaUm = null;
       }, 450);
@@ -1627,7 +1751,7 @@ function configurarDigitacao() {
     }
 
     const n = parseInt(limpo, 10);
-    if (n >= 0 && n <= 10 && dados.length && current < dados.length) {
+    if (n >= NOTA_MIN && n <= NOTA_MAX && dados.length && current < dados.length) {
       salvarNota(n);
       setTimeout(() => {
         inp.value = '';
@@ -1645,6 +1769,11 @@ function configurarDigitacao() {
 
   inp.addEventListener('keydown', e => {
     if (['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      finalizar();
+      return;
+    }
     if (e.key >= '0' && e.key <= '9') {
       return;
     } else if (e.key === 'Escape') {
@@ -1659,6 +1788,8 @@ function configurarDigitacao() {
     e.preventDefault();
     processar((e.clipboardData || window.clipboardData).getData('text'));
   });
+
+  window.confirmarNotaManual = finalizar;
 }
 
 function startRecognition() { VozEngine.iniciar(); }
@@ -1671,6 +1802,7 @@ window.exportarCSV = exportarCSV;
 window.resetarExperimento = resetarExperimento;
 window.mudarPagina = mudarPagina;
 window.setNumAvaliacoes = setNumAvaliacoes;
+window.setFaixaNotas = setFaixaNotas;
 window.irParaCelula = irParaCelula;
 window.pularParcela = pularParcela;
 window.garantirFocoDigitacao = garantirFocoDigitacao;
