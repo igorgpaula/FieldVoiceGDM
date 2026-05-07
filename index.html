@@ -724,6 +724,11 @@ let bloquearNotasVozAte = 0;
 const JANELA_DEDUP_NOTA_VOZ_MS = 3000;
 const JANELA_TRAVA_NOTA_VOZ_MS = 2200;
 const PAUSA_MICROFONE_APOS_NOTA_MS = 1800;
+let origemComandoAtual = '';
+let ultimaNotaVozGravadaEm = 0;
+let ultimaNotaVozGravadaValor = null;
+const JANELA_GRAVACAO_NOTA_VOZ_MS = 3200;
+const APP_VERSION = '2026-05-06-voz-lock-3';
 
 function normalizarTextoVoz(texto) {
   return String(texto || '')
@@ -820,7 +825,12 @@ function receberComandoVoz(texto) {
     bloquearNotasVozAte = agora + JANELA_TRAVA_NOTA_VOZ_MS;
   }
 
-  processarComando(texto);
+  origemComandoAtual = 'voz';
+  try {
+    processarComando(texto);
+  } finally {
+    origemComandoAtual = '';
+  }
   return token;
 }
 
@@ -830,6 +840,8 @@ function limparDedupVoz() {
   ultimoTokenAcaoVoz = '';
   ultimoTokenAcaoVozEm = 0;
   bloquearNotasVozAte = 0;
+  ultimaNotaVozGravadaEm = 0;
+  ultimaNotaVozGravadaValor = null;
 }
 
 function limparComandoVozSemLiberarNota() {
@@ -1347,6 +1359,21 @@ function salvarNota(numero) {
   }
 
   const nota = Math.min(9, Math.max(1, parseInt(numero, 10)));
+  const veioDaVoz = origemComandoAtual === 'voz';
+  const agora = Date.now();
+
+  if (veioDaVoz && agora - ultimaNotaVozGravadaEm < JANELA_GRAVACAO_NOTA_VOZ_MS) {
+    document.getElementById('debug').textContent =
+      `🛑 gravação bloqueada: ${nota} (${Math.round((JANELA_GRAVACAO_NOTA_VOZ_MS - (agora - ultimaNotaVozGravadaEm)) / 100) / 10}s)`;
+    return false;
+  }
+
+  if (veioDaVoz) {
+    ultimaNotaVozGravadaEm = agora;
+    ultimaNotaVozGravadaValor = nota;
+    bloquearNotasVozAte = agora + JANELA_GRAVACAO_NOTA_VOZ_MS;
+  }
+
   const key = `nota${colunaAtual}`;
   const isCorrecao = dados[current][key] !== null;
   dados[current][key] = nota;
@@ -1600,11 +1627,13 @@ window.addEventListener('load', () => {
   atualizarToggleRede();
   configurarDigitacao();
   carregarDados();
+  document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
   setTimeout(() => garantirFocoDigitacao(), 300);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(() => console.log('SW registrado'))
+    navigator.serviceWorker.getRegistrations()
+      .then(regs => Promise.all(regs.map(reg => reg.unregister())))
+      .then(() => console.log('SW antigo removido'))
       .catch(e => console.warn('SW:', e));
   }
 });
