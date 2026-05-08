@@ -1371,6 +1371,10 @@ window.addEventListener('offline', () => {
 });
 
 window.addEventListener('pagehide', () => salvarDados());
+
+window.Capacitor?.Plugins?.App?.addListener?.('appStateChange', ({ isActive }) => {
+  if (!isActive) salvarDados();
+});
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') salvarDados();
 });
@@ -1601,26 +1605,126 @@ async function solicitarPermissao() {
   if (r.speechRecognition !== 'granted') beepErro();
 }
 
-function salvarDados() {
-  try {
-    localStorage.setItem('fieldVoiceAuto', JSON.stringify({
-      dados,
-      current,
-      colunaAtual,
-      nomeCSV,
-      paginaAtual,
-      numAvaliacoes: NUM_AVALIACOES,
-      nomesAvaliacoes: NOMES_AVALIACOES,
-      notaMin: NOTA_MIN,
-      notaMax: NOTA_MAX,
-      faixaNotasPersonalizada: FAIXA_NOTAS_PERSONALIZADA,
-      idioma: IDIOMA_APP
-    }));
-  } catch (e) {}
+const STORAGE_KEY = 'fieldVoiceAuto';
+
+function estadoPersistente() {
+  return {
+    dados,
+    current,
+    colunaAtual,
+    nomeCSV,
+    paginaAtual,
+    numAvaliacoes: NUM_AVALIACOES,
+    nomesAvaliacoes: NOMES_AVALIACOES,
+    notaMin: NOTA_MIN,
+    notaMax: NOTA_MAX,
+    faixaNotasPersonalizada: FAIXA_NOTAS_PERSONALIZADA,
+    idioma: IDIOMA_APP,
+    savedAt: Date.now()
+  };
 }
 
-function carregarDados() {
-  const s = localStorage.getItem('fieldVoiceAuto');
+function pluginPreferencias() {
+  return window.Capacitor?.Plugins?.Preferences || window.Capacitor?.Plugins?.Storage;
+}
+
+function abrirBancoPersistente() {
+  if (!window.indexedDB) return Promise.resolve(null);
+  return new Promise(resolve => {
+    const req = indexedDB.open('FieldVoiceDB', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('estado');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+    req.onblocked = () => resolve(null);
+  });
+}
+
+async function salvarIndexedDB(serializado) {
+  const db = await abrirBancoPersistente();
+  if (!db) return;
+  await new Promise(resolve => {
+    const tx = db.transaction('estado', 'readwrite');
+    tx.objectStore('estado').put(serializado, STORAGE_KEY);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); resolve(); };
+    tx.onabort = () => { db.close(); resolve(); };
+  });
+}
+
+async function carregarIndexedDB() {
+  const db = await abrirBancoPersistente();
+  if (!db) return null;
+  return new Promise(resolve => {
+    const tx = db.transaction('estado', 'readonly');
+    const req = tx.objectStore('estado').get(STORAGE_KEY);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => resolve(null);
+    tx.oncomplete = () => db.close();
+    tx.onerror = () => db.close();
+  });
+}
+
+async function removerIndexedDB() {
+  const db = await abrirBancoPersistente();
+  if (!db) return;
+  await new Promise(resolve => {
+    const tx = db.transaction('estado', 'readwrite');
+    tx.objectStore('estado').delete(STORAGE_KEY);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); resolve(); };
+    tx.onabort = () => { db.close(); resolve(); };
+  });
+}
+
+function salvarDados() {
+  const serializado = JSON.stringify(estadoPersistente());
+  try {
+    localStorage.setItem(STORAGE_KEY, serializado);
+  } catch (e) {}
+
+  salvarIndexedDB(serializado).catch(() => {});
+
+  const prefs = pluginPreferencias();
+  if (prefs?.set) {
+    prefs.set({ key: STORAGE_KEY, value: serializado }).catch(() => {});
+  }
+}
+
+async function carregarEstadoPersistente() {
+  const candidatos = [];
+  const prefs = pluginPreferencias();
+  if (prefs?.get) {
+    try {
+      const r = await prefs.get({ key: STORAGE_KEY });
+      if (r?.value) candidatos.push(r.value);
+    } catch (e) {}
+  }
+
+  const indexed = await carregarIndexedDB();
+  if (indexed) candidatos.push(indexed);
+
+  try {
+    const local = localStorage.getItem(STORAGE_KEY);
+    if (local) candidatos.push(local);
+  } catch (e) {}
+
+  let maisRecente = null;
+  let maiorData = -1;
+  for (const serializado of candidatos) {
+    try {
+      const estado = JSON.parse(serializado);
+      const data = Number.isFinite(estado.savedAt) ? estado.savedAt : 0;
+      if (data > maiorData) {
+        maiorData = data;
+        maisRecente = serializado;
+      }
+    } catch (e) {}
+  }
+  return maisRecente;
+}
+
+async function carregarDados() {
+  const s = await carregarEstadoPersistente();
   if (!s) return false;
   try {
     const e = JSON.parse(s);
@@ -1666,7 +1770,10 @@ function carregarDados() {
 
 function resetarExperimento() {
   if (!confirm('⚠️ Apagar todos os dados?')) return;
-  localStorage.removeItem('fieldVoiceAuto');
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  removerIndexedDB().catch(() => {});
+  const prefs = pluginPreferencias();
+  if (prefs?.remove) prefs.remove({ key: STORAGE_KEY }).catch(() => {});
   dados = [];
   current = 0;
   colunaAtual = 1;
@@ -2277,7 +2384,7 @@ window.limparDescricao = limparDescricao;
 
 window.addEventListener('resize', atualizarOffsetFixo);
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   atualizarOffsetFixo();
   atualizarBadgeModo();
   atualizarToggleRede();
@@ -2286,8 +2393,8 @@ window.addEventListener('load', () => {
   atualizarUIFaixaNotas();
   atualizarNomesAvaliacoesUI();
   configurarDigitacao();
-  carregarDados();
-  document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
+  const recuperouDados = await carregarDados();
+  if (!recuperouDados) document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
   setTimeout(() => garantirFocoDigitacao(), 300);
 
 });
