@@ -44,32 +44,49 @@ body {
 
 .nav-bar {
   background: linear-gradient(160deg, #1e4530 0%, #163320 100%);
-  padding: calc(env(safe-area-inset-top) + 14px) 20px 16px;
-  display: flex;
+  padding: calc(env(safe-area-inset-top) + 12px) 14px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title controls"
+    "debug debug";
   align-items: center;
-  justify-content: space-between;
+  gap: 7px 10px;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 12px rgba(0,0,0,0.22);
 }
-.nav-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.nav-title { color: #fff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0; }
-.nav-sub {
-  color: rgba(255,255,255,0.62);
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  line-height: 1.35;
+.nav-left { display: contents; }
+.nav-title {
+  grid-area: title;
+  min-width: 0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.nav-sub {
+  grid-area: debug;
+  color: rgba(255,255,255,0.74);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   max-width: 100%;
 }
 .mode-badge {
   font-size: 0.62rem;
   font-weight: 700;
-  padding: 5px 12px;
+  padding: 4px 8px;
   border-radius: 20px;
   letter-spacing: 0.2px;
 }
@@ -77,20 +94,20 @@ body {
 .mode-badge.web { background: rgba(255,59,48,0.22); color: #ff6b62; }
 
 .nav-right {
+  grid-area: controls;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 5px 6px;
-  flex-shrink: 0;
-  max-width: 190px;
+  gap: 4px;
+  max-width: 142px;
 }
 .voice-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border-radius: 20px;
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: rgba(255,255,255,0.14);
   color: rgba(255,255,255,0.92);
   font-size: 0.62rem;
@@ -113,10 +130,10 @@ body {
   gap: 5px;
   border: none;
   border-radius: 20px;
-  padding: 4px 10px 4px 6px;
+  padding: 4px 8px 4px 6px;
   font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.1px;
   cursor: pointer;
   transition: background 0.25s, color 0.25s;
 }
