@@ -1330,16 +1330,28 @@ function extrairNotaVoz(raw) {
   return null;
 }
 
+let ultimoComandoVoz = '';
+let ultimoComandoVozMs = 0;
+const JANELA_DEDUP_VOZ_MS = 900;
+
 function receberComandoVoz(texto) {
+  const assinatura = normalizarTextoVoz(texto);
+  const agora = Date.now();
+  if (assinatura && assinatura === ultimoComandoVoz && agora - ultimoComandoVozMs < JANELA_DEDUP_VOZ_MS) {
+    return;
+  }
+  ultimoComandoVoz = assinatura;
+  ultimoComandoVozMs = agora;
   processarComando(texto);
 }
 
 function limparDedupVoz() {
-  return;
+  ultimoComandoVoz = '';
+  ultimoComandoVozMs = 0;
 }
 
 function limparComandoVozSemLiberarNota() {
-  return;
+  if (ultimoComandoVoz) ultimoComandoVozMs = Date.now();
 }
 
 window.addEventListener('online', () => {
@@ -2278,12 +2290,6 @@ window.addEventListener('load', () => {
   document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
   setTimeout(() => garantirFocoDigitacao(), 300);
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then(regs => Promise.all(regs.map(reg => reg.unregister())))
-      .then(() => console.log('SW antigo removido'))
-      .catch(e => console.warn('SW:', e));
-  }
 });
 </script>
 </body>
