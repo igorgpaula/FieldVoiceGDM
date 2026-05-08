@@ -29,6 +29,7 @@
   --sep: rgba(60,60,67,0.10);
   --card-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 3px 10px rgba(0,0,0,0.07);
   --card-shadow-lg: 0 4px 20px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.06);
+  --nav-sticky-offset: 76px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -52,9 +53,19 @@ body {
   z-index: 100;
   box-shadow: 0 2px 12px rgba(0,0,0,0.22);
 }
-.nav-left { display: flex; flex-direction: column; gap: 2px; }
+.nav-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .nav-title { color: #fff; font-size: 1.15rem; font-weight: 800; letter-spacing: 0; }
-.nav-sub { color: rgba(255,255,255,0.5); font-size: 0.65rem; font-weight: 500; letter-spacing: 0.3px; }
+.nav-sub {
+  color: rgba(255,255,255,0.62);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
 .mode-badge {
   font-size: 0.62rem;
   font-weight: 700;
@@ -65,7 +76,37 @@ body {
 .mode-badge.offline { background: rgba(45,184,75,0.25); color: #3dca5e; }
 .mode-badge.web { background: rgba(255,59,48,0.22); color: #ff6b62; }
 
-.nav-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 5px 6px;
+  flex-shrink: 0;
+  max-width: 190px;
+}
+.voice-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 20px;
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.92);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+.voice-pill .status-dot {
+  width: 7px;
+  height: 7px;
+  background: rgba(255,255,255,0.5);
+}
+.voice-pill .status-dot.active {
+  background: #3dca5e;
+  box-shadow: 0 0 0 3px rgba(61,202,94,0.22);
+}
+.voice-pill #status { color: inherit; font-size: inherit; font-weight: inherit; }
 .rede-toggle {
   display: flex;
   align-items: center;
@@ -86,6 +127,20 @@ body {
 .rede-toggle.offline .rede-dot { background: #636366; }
 
 .content { padding: 12px 0 4px; }
+.current-panel {
+  position: sticky;
+  top: var(--nav-sticky-offset);
+  z-index: 80;
+  background: rgba(255,255,255,0.96);
+  padding: 8px 0 1px;
+  box-shadow: 0 10px 18px rgba(255,255,255,0.94);
+}
+.current-panel .section-label { margin-top: 0; }
+.current-panel .hero-card { margin-bottom: 8px; padding: 14px 16px 13px; border-radius: 18px; }
+.current-panel .hero-eyebrow { margin-bottom: 4px; }
+.current-panel #plot { font-size: 1.25rem; }
+.current-panel .notas-container { margin-top: 10px; gap: 8px; }
+.current-panel .nota-individual .valor { width: 46px; height: 46px; border-radius: 14px; font-size: 1.25rem; }
 .section-label {
   font-size: 0.7rem;
   font-weight: 700;
@@ -294,6 +349,112 @@ input[type="file"] { display: none; }
   cursor: pointer;
   min-height: 44px;
 }
+.setup-card {
+  background: var(--card);
+  border-radius: 16px;
+  margin: 0 16px 12px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.setup-step {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--sep);
+}
+.setup-step:last-child { border-bottom: none; }
+.setup-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.setup-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sys-green-lt);
+  color: var(--sys-green);
+  font-size: 0.72rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.setup-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--label2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 7px;
+}
+.setup-input {
+  width: 100%;
+  border: 1.5px solid var(--sep);
+  border-radius: 10px;
+  padding: 9px 7px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--label);
+  background: #fff;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.setup-input:focus {
+  outline: none;
+  border-color: var(--sys-blue);
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+}
+.setup-select {
+  width: 100%;
+  border: 1.5px solid var(--sep);
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--label);
+  background: #fff;
+}
+.setup-file-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+.guide-btn {
+  border: none;
+  border-radius: 11px;
+  background: var(--sys-blue-lt);
+  color: var(--sys-blue);
+  padding: 9px 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (min-width: 560px) {
+  .setup-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "avaliacoes nomes"
+      "faixa idioma"
+      "csv csv";
+  }
+  .setup-step { border-bottom: 1px solid var(--sep); }
+  .setup-step:nth-child(1) { grid-area: avaliacoes; border-right: 1px solid var(--sep); }
+  .setup-step:nth-child(2) { grid-area: nomes; }
+  .setup-step:nth-child(3) { grid-area: faixa; border-right: 1px solid var(--sep); border-bottom: none; }
+  .setup-step:nth-child(4) { grid-area: idioma; border-bottom: none; }
+  .setup-step:nth-child(5) { grid-area: csv; border-top: 1px solid var(--sep); border-bottom: none; }
+  .setup-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+}
 
 .status-card {
   background: var(--card);
@@ -500,7 +661,7 @@ input[type="file"] { display: none; }
 <div class="nav-bar">
   <div class="nav-left">
     <span class="nav-title">🌾 Field Voice PRO</span>
-    <span class="nav-sub">Multitrait · coleta offline</span>
+    <span class="nav-sub" id="debug" aria-live="polite">Aguardando CSV...</span>
   </div>
   <div class="nav-right">
     <span id="badgeModo" class="mode-badge offline">carregando...</span>
@@ -508,13 +669,22 @@ input[type="file"] { display: none; }
       <span class="rede-dot"></span>
       <span id="redeLabel">OFFLINE</span>
     </button>
+    <div class="voice-pill" aria-live="polite">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="status">Parado</span>
+    </div>
   </div>
 </div>
 
 <div class="content">
-  <p class="section-label">Avaliações por parcela</p>
-  <div class="ios-card">
-    <div class="seg-wrap">
+  <p class="section-label">Configuração guiada</p>
+  <div class="setup-card">
+    <div class="setup-step">
+      <div class="setup-head">
+        <span class="setup-num">1</span>
+        <span class="setup-title">Número de avaliações</span>
+        <button class="guide-btn" onclick="falarGuiaConfiguracao()">Guia</button>
+      </div>
       <div class="seg-ctrl">
         <button class="seg-btn" onclick="setNumAvaliacoes(1)">1</button>
         <button class="seg-btn" onclick="setNumAvaliacoes(2)">2</button>
@@ -523,54 +693,65 @@ input[type="file"] { display: none; }
         <button class="seg-btn ativo" onclick="setNumAvaliacoes(5)">5</button>
       </div>
     </div>
-  </div>
 
-  <p class="section-label">Idioma</p>
-  <div class="ios-card">
-    <div class="range-row" style="grid-template-columns:1fr;">
-      <div class="range-field">
-        <label for="idiomaSelect">Voz e retorno</label>
-        <select id="idiomaSelect" onchange="setIdiomaApp()"
-          style="width:100%;border:1.5px solid var(--sep);border-radius:12px;padding:12px 10px;font-size:1rem;font-weight:800;color:var(--label);background:#fff;">
-          <option value="pt">Português</option>
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
+    <div class="setup-step">
+      <div class="setup-head">
+        <span class="setup-num">2</span>
+        <span class="setup-title">Nome das avaliações</span>
+      </div>
+      <div class="setup-grid" id="avaliacaoNomesGrid"></div>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-head">
+        <span class="setup-num">3</span>
+        <span class="setup-title">Mínimo e máximo</span>
+      </div>
+      <div class="range-row" style="padding:0;">
+        <div class="range-field">
+          <label for="notaMinInput">Mínima</label>
+          <input type="number" id="notaMinInput" inputmode="numeric" value="1" onchange="setFaixaNotas()">
+        </div>
+        <div class="range-field">
+          <label for="notaMaxInput">Máxima</label>
+          <input type="number" id="notaMaxInput" inputmode="numeric" value="9" onchange="setFaixaNotas()">
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-head">
+        <span class="setup-num">4</span>
+        <span class="setup-title">Idioma da voz</span>
+      </div>
+      <select id="idiomaSelect" class="setup-select" onchange="setIdiomaApp()">
+        <option value="pt">Português</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-head">
+        <span class="setup-num">5</span>
+        <span class="setup-title">Carregar CSV</span>
+      </div>
+      <div class="setup-file-row">
+        <div class="file-info">
+          <div class="file-title">Arquivo de parcelas</div>
+          <div class="file-desc" id="fileLabel">plot_id · genotipo · testemunha</div>
+        </div>
+        <label class="file-pick-label">
+          Selecionar
+          <input type="file" id="fileInput" accept=".csv" onchange="carregarCSV()">
+        </label>
       </div>
     </div>
   </div>
 
-  <p class="section-label">Faixa de notas</p>
-  <div class="ios-card">
-    <div class="range-row">
-      <div class="range-field">
-        <label for="notaMinInput">Mínima</label>
-        <input type="number" id="notaMinInput" inputmode="numeric" value="0" onchange="setFaixaNotas()">
-      </div>
-      <div class="range-field">
-        <label for="notaMaxInput">Máxima</label>
-        <input type="number" id="notaMaxInput" inputmode="numeric" value="10" onchange="setFaixaNotas()">
-      </div>
-    </div>
-  </div>
-
-  <p class="section-label">Arquivo</p>
-  <div class="ios-card">
-    <div class="file-row">
-      <span class="file-icon">📂</span>
-      <div class="file-info">
-        <div class="file-title">Carregar CSV</div>
-        <div class="file-desc" id="fileLabel">plot_id · genotipo · testemunha</div>
-      </div>
-      <label class="file-pick-label">
-        Selecionar
-        <input type="file" id="fileInput" accept=".csv" onchange="carregarCSV()">
-      </label>
-    </div>
-  </div>
-
-  <p class="section-label">Parcela atual</p>
-  <div class="hero-card">
+<div class="current-panel">
+    <p class="section-label">Parcela atual</p>
+    <div class="hero-card">
     <div class="hero-eyebrow">em avaliação</div>
     <div id="plot">📋 Nenhum CSV carregado</div>
     <div id="notasDisplay" class="notas-container"></div>
@@ -578,7 +759,8 @@ input[type="file"] { display: none; }
       <span class="descricao-icon">📝</span>
       <span id="descricaoTexto" class="descricao-texto"></span>
       <button class="descricao-clear" onclick="limparDescricao()">✕</button>
-    </div>
+</div>
+  </div>
   </div>
 
   <div class="input-card" id="manualCard" style="display:none;">
@@ -587,16 +769,7 @@ input[type="file"] { display: none; }
     <button class="manual-ok-btn" onclick="confirmarNotaManual()">OK</button>
   </div>
 
-  <p class="section-label">Reconhecimento de voz</p>
-  <div class="status-card">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="status">Parado</span>
-    <span class="status-hint" id="rangeHint">nota configurada<br>offline: teclado</span>
-  </div>
-
-  <div class="debug-pill">🧠 <span id="debug">Aguardando CSV...</span></div>
-
-  <p class="section-label" id="gridLabel" style="display:none">Parcelas</p>
+<p class="section-label" id="gridLabel" style="display:none">Parcelas</p>
   <div id="gridContainer" style="display:none">
     <div class="grid-header-bar">📋 Lista de parcelas - toque para editar</div>
     <div id="paginacao" class="pagina-botoes"></div>
@@ -641,6 +814,11 @@ const isNative = () =>
   typeof window.Capacitor.isNativePlatform === 'function' &&
   window.Capacitor.isNativePlatform();
 
+function atualizarOffsetFixo() {
+  const nav = document.querySelector('.nav-bar');
+  if (nav) document.documentElement.style.setProperty('--nav-sticky-offset', `${nav.offsetHeight}px`);
+}
+
 function atualizarBadgeModo() {
   const b = document.getElementById('badgeModo');
   if (isNative()) {
@@ -653,11 +831,15 @@ function atualizarBadgeModo() {
 }
 
 function setStatusVoz(ativado) {
-  document.getElementById('statusDot').classList.toggle('active', ativado);
+  const dot = document.getElementById('statusDot');
+  const status = document.getElementById('status');
+  if (dot) dot.classList.toggle('active', ativado);
+  if (status) status.textContent = ativado ? 'Ouvindo' : 'Parado';
 }
 
 let NUM_AVALIACOES = 5;
 let colunaAtual = 1;
+let NOMES_AVALIACOES = ['A1', 'A2', 'A3', 'A4', 'A5'];
 
 function setNumAvaliacoes(num) {
   NUM_AVALIACOES = num;
@@ -675,6 +857,7 @@ function setNumAvaliacoes(num) {
   }
 
   atualizarColunaAtual();
+  atualizarNomesAvaliacoesUI();
   atualizarTela();
   salvarDados();
 }
@@ -813,11 +996,14 @@ let paginaAtual = 1;
 const POR_PAGINA = 100;
 let modoDescricao = false;
 let modoOnline = navigator.onLine;
-let NOTA_MIN = 0;
-let NOTA_MAX = 10;
+const DEFAULT_NOTA_MIN = 1;
+const DEFAULT_NOTA_MAX = 9;
+let NOTA_MIN = DEFAULT_NOTA_MIN;
+let NOTA_MAX = DEFAULT_NOTA_MAX;
+let FAIXA_NOTAS_PERSONALIZADA = false;
 let IDIOMA_APP = 'pt';
 
-const APP_VERSION = '2026-05-07-language-select-1';
+const APP_VERSION = '2026-05-08-guided-eval-names-1';
 
 const IDIOMAS = {
   pt: {
@@ -914,6 +1100,26 @@ function atualizarUIFaixaNotas() {
   }
 }
 
+function nomeAvaliacao(idx) {
+  return (NOMES_AVALIACOES[idx - 1] || `A${idx}`).slice(0, 5);
+}
+
+function atualizarNomesAvaliacoesUI() {
+  const grid = document.getElementById('avaliacaoNomesGrid');
+  if (!grid) return;
+  let html = '';
+  for (let i = 1; i <= NUM_AVALIACOES; i++) {
+    html += `<input class="setup-input" maxlength="5" value="${escHTML(nomeAvaliacao(i))}" oninput="setNomeAvaliacao(${i}, this.value)" aria-label="Avaliação ${i}">`;
+  }
+  grid.innerHTML = html;
+}
+
+function setNomeAvaliacao(idx, valor) {
+  NOMES_AVALIACOES[idx - 1] = String(valor || `A${idx}`).trim().slice(0, 5) || `A${idx}`;
+  atualizarTela();
+  salvarDados();
+}
+
 function atualizarUIIdioma() {
   const sel = document.getElementById('idiomaSelect');
   if (sel) sel.value = IDIOMA_APP;
@@ -928,20 +1134,53 @@ function setIdiomaApp() {
   document.getElementById('debug').textContent = `✅ Idioma: ${cfgIdioma().speech}`;
 }
 
+function falarGuiaConfiguracao() {
+  falarAvisoLocal('Número de avaliações. Escolher nomes. Escolher máximo e mínimo. Escolher idioma. Carregar CSV. Pronto.', 1.28);
+}
+
+function processarGuiaConfiguracao(raw) {
+  if (raw.includes('numero de avaliacoes') || raw.includes('número de avaliações')) {
+    falarAvisoLocal(`Etapa 1. Escolha de 1 a 5 avaliações por parcela. Atual: ${NUM_AVALIACOES}.`, 1.28);
+    return true;
+  }
+  if (raw.includes('escolher nomes') || raw.includes('nome das avaliacoes') || raw.includes('nomes das avaliacoes')) {
+    falarAvisoLocal('Etapa 2. Defina nomes curtos para as avaliações, com até cinco caracteres.', 1.28);
+    return true;
+  }
+  if (raw.includes('max e min') || raw.includes('min e max') || raw.includes('maximo e minimo') || raw.includes('minimo e maximo')) {
+    falarAvisoLocal(`Etapa 3. Defina mínimo e máximo. Atual: ${NOTA_MIN} a ${NOTA_MAX}.`, 1.28);
+    return true;
+  }
+  if (raw.includes('escolher idioma') || raw.includes('idioma da voz')) {
+    falarAvisoLocal(`Etapa 4. Escolha o idioma da voz. Atual: ${cfgIdioma().speech}.`, 1.28);
+    return true;
+  }
+  if (raw.includes('carregar csv') || raw.includes('subir csv')) {
+    falarAvisoLocal('Etapa 5. Carregue o CSV de parcelas.', 1.28);
+    return true;
+  }
+  if (raw.includes('pronto')) {
+    falarAvisoLocal(`Pronto. ${NUM_AVALIACOES} avaliações. Notas de ${NOTA_MIN} a ${NOTA_MAX}. Idioma ${cfgIdioma().speech}.`, 1.28);
+    return true;
+  }
+  return false;
+}
+
 function setFaixaNotas() {
   const minInp = document.getElementById('notaMinInput');
   const maxInp = document.getElementById('notaMaxInput');
   let min = parseInt(minInp?.value, 10);
   let max = parseInt(maxInp?.value, 10);
 
-  if (!Number.isInteger(min)) min = 0;
-  if (!Number.isInteger(max)) max = 10;
+  if (!Number.isInteger(min)) min = DEFAULT_NOTA_MIN;
+  if (!Number.isInteger(max)) max = DEFAULT_NOTA_MAX;
   min = Math.max(0, min);
   max = Math.max(0, max);
   if (min > max) [min, max] = [max, min];
 
   NOTA_MIN = min;
   NOTA_MAX = max;
+  FAIXA_NOTAS_PERSONALIZADA = true;
   atualizarUIFaixaNotas();
   salvarDados();
   document.getElementById('debug').textContent = `✅ ${cfgIdioma().rangeSet}: ${NOTA_MIN}-${NOTA_MAX}`;
@@ -1114,7 +1353,7 @@ window.addEventListener('offline', () => {
   falarAvisoLocal(cfgIdioma().offline, 1.35);
   setTimeout(() => {
     if (rodando) VozEngine.parar();
-    document.getElementById('status').textContent = 'Offline: teclado';
+    document.getElementById('status').textContent = 'Parado';
     document.getElementById('debug').textContent = `📴 ${cfgIdioma().offline}`;
   }, 0);
 });
@@ -1142,7 +1381,7 @@ const VozEngine = {
     const plugin = window.Capacitor.Plugins.SpeechRecognition;
     rodando = true;
     setStatusVoz(true);
-    document.getElementById('status').textContent = '🎙️ ouvindo...';
+    document.getElementById('status').textContent = 'Ouvindo';
 
     while (ativo) {
       try {
@@ -1216,14 +1455,14 @@ const VozEngine = {
     this._webRec.onstart = () => {
       rodando = true;
       setStatusVoz(true);
-      document.getElementById('status').textContent = '🎙️ ouvindo...';
+      document.getElementById('status').textContent = 'Ouvindo';
     };
     this._webRec.onerror = (e) => {
       if (e.error === 'not-allowed') {
         ativo = false;
         rodando = false;
         setStatusVoz(false);
-        document.getElementById('status').textContent = '❌ microfone bloqueado';
+        document.getElementById('status').textContent = 'Parado';
       }
     };
     this._webRec.onresult = (e) => {
@@ -1256,7 +1495,7 @@ const VozEngine = {
     }
     if (!modoOnline) {
       document.getElementById('debug').textContent = '📴 Offline: use o teclado manual';
-      document.getElementById('status').textContent = 'Offline: teclado';
+      document.getElementById('status').textContent = 'Parado';
       setStatusVoz(false);
       if (document.getElementById('manualCard').style.display === 'none') toggleManual();
       return;
@@ -1276,6 +1515,8 @@ const VozEngine = {
 function processarComando(texto) {
   const raw = normalizarTextoVoz(texto);
   const comandos = cfgIdioma().commands;
+
+  if (processarGuiaConfiguracao(raw)) return;
 
   if (modoDescricao) {
     modoDescricao = false;
@@ -1357,8 +1598,10 @@ function salvarDados() {
       nomeCSV,
       paginaAtual,
       numAvaliacoes: NUM_AVALIACOES,
+      nomesAvaliacoes: NOMES_AVALIACOES,
       notaMin: NOTA_MIN,
       notaMax: NOTA_MAX,
+      faixaNotasPersonalizada: FAIXA_NOTAS_PERSONALIZADA,
       idioma: IDIOMA_APP
     }));
   } catch (e) {}
@@ -1369,8 +1612,22 @@ function carregarDados() {
   if (!s) return false;
   try {
     const e = JSON.parse(s);
-    if (Number.isInteger(e.notaMin)) NOTA_MIN = e.notaMin;
-    if (Number.isInteger(e.notaMax)) NOTA_MAX = e.notaMax;
+    const temNotaMinMax = Number.isInteger(e.notaMin) && Number.isInteger(e.notaMax);
+    const faixaAntigaPadrao = e.notaMin === 0 && e.notaMax === 10 && e.faixaNotasPersonalizada !== true;
+    if (temNotaMinMax && !faixaAntigaPadrao) {
+      NOTA_MIN = e.notaMin;
+      NOTA_MAX = e.notaMax;
+      FAIXA_NOTAS_PERSONALIZADA = e.faixaNotasPersonalizada === true ||
+        e.notaMin !== DEFAULT_NOTA_MIN ||
+        e.notaMax !== DEFAULT_NOTA_MAX;
+    } else {
+      NOTA_MIN = DEFAULT_NOTA_MIN;
+      NOTA_MAX = DEFAULT_NOTA_MAX;
+      FAIXA_NOTAS_PERSONALIZADA = false;
+    }
+    if (Array.isArray(e.nomesAvaliacoes)) {
+      NOMES_AVALIACOES = [1, 2, 3, 4, 5].map(i => String(e.nomesAvaliacoes[i - 1] || `A${i}`).slice(0, 5));
+    }
     if (IDIOMAS[e.idioma]) IDIOMA_APP = e.idioma;
     if (NOTA_MIN > NOTA_MAX) [NOTA_MIN, NOTA_MAX] = [NOTA_MAX, NOTA_MIN];
     atualizarUIIdioma();
@@ -1386,6 +1643,7 @@ function carregarDados() {
       document.querySelectorAll('.seg-btn').forEach((b, i) => {
         b.classList.toggle('ativo', i + 1 === NUM_AVALIACOES);
       });
+      atualizarNomesAvaliacoesUI();
       atualizarTela();
       document.getElementById('debug').textContent = '✅ Dados recuperados!';
       return true;
@@ -1403,6 +1661,10 @@ function resetarExperimento() {
   nomeCSV = '';
   paginaAtual = 1;
   modoDescricao = false;
+  NOTA_MIN = DEFAULT_NOTA_MIN;
+  NOTA_MAX = DEFAULT_NOTA_MAX;
+  FAIXA_NOTAS_PERSONALIZADA = false;
+  atualizarUIFaixaNotas();
   limparDedupVoz();
   VozEngine.parar();
   document.getElementById('fileLabel').textContent = 'plot_id · genotipo · testemunha';
@@ -1446,7 +1708,7 @@ function atualizarGrid() {
   gridLabel.style.display = 'block';
 
   let hdr = '<tr><th>Parcela</th>';
-  for (let i = 1; i <= NUM_AVALIACOES; i++) hdr += `<th>A${i}</th>`;
+  for (let i = 1; i <= NUM_AVALIACOES; i++) hdr += `<th>${escHTML(nomeAvaliacao(i))}</th>`;
   hdr += '</tr>';
   document.getElementById('gridHeader').innerHTML = hdr;
 
@@ -1507,7 +1769,7 @@ function atualizarDisplayNotas() {
     const val = nota !== null ? nota : '○';
     const cls = i === colunaAtual ? 'active' : (nota !== null ? 'filled' : '');
     html += `<div class="nota-individual">
-      <div class="label">A${i}</div>
+      <div class="label">${escHTML(nomeAvaliacao(i))}</div>
       <div class="valor ${cls}" id="nota${i}Atual">${val}</div>
     </div>`;
   }
@@ -1698,25 +1960,64 @@ function carregarCSV() {
   const reader = new FileReader();
   reader.onload = (e) => {
     const linhas = e.target.result.split(/\r?\n/);
-    const start = linhas[0].toLowerCase().includes('plot_id') ? 1 : 0;
+    const temHeader = linhas[0]?.toLowerCase().includes('plot_id');
+    const header = temHeader ? parseCSVLine(linhas[0]).map(h => h.trim()) : [];
+    const headerLower = header.map(h => normalizarTextoVoz(h));
+    const start = temHeader ? 1 : 0;
+    const idxPlot = Math.max(0, headerLower.indexOf('plot_id'));
+    const idxGen = headerLower.indexOf('genotipo') >= 0 ? headerLower.indexOf('genotipo') : 1;
+    const idxTest = headerLower.indexOf('testemunha');
+    const idxDesc = headerLower.indexOf('descricao');
+    const notaIdxs = [];
+
+    if (temHeader) {
+      const inicioNotas = idxTest >= 0 ? idxTest + 1 : 3;
+      const fimNotas = idxDesc >= 0 ? idxDesc : header.length;
+      const nomesNoArquivo = header.slice(inicioNotas, fimNotas).filter(Boolean).slice(0, 5);
+      if (nomesNoArquivo.length) {
+        NUM_AVALIACOES = nomesNoArquivo.length;
+        NOMES_AVALIACOES = [1, 2, 3, 4, 5].map(i => String(nomesNoArquivo[i - 1] || `A${i}`).trim().slice(0, 5) || `A${i}`);
+        document.querySelectorAll('.seg-btn').forEach((b, i) => {
+          b.classList.toggle('ativo', i + 1 === NUM_AVALIACOES);
+        });
+        atualizarNomesAvaliacoesUI();
+      }
+
+      for (let j = 1; j <= NUM_AVALIACOES; j++) {
+        const candidatos = [
+          normalizarTextoVoz(nomeAvaliacao(j)),
+          `avaliacao${j}`,
+          `nota${j}`,
+          `a${j}`
+        ];
+        const idx = headerLower.findIndex(h => candidatos.includes(h));
+        notaIdxs[j] = idx;
+      }
+    }
+
     const novos = [];
 
     for (let i = start; i < linhas.length; i++) {
       const l = linhas[i].trim();
       if (!l) continue;
-      const cols = l.includes(',') ? l.split(',') : l.includes(';') ? l.split(';') : l.split(/\t/);
+      const cols = parseCSVLine(l);
       if (cols.length < 2) continue;
 
-      const plot_id = parseInt(cols[0], 10);
+      const plot_id = parseInt(cols[idxPlot] ?? cols[0], 10);
       if (Number.isNaN(plot_id)) continue;
 
-      const genotipo = cols[1].trim();
-      const testemunha = cols.length >= 3
-        ? (cols[2].trim().toLowerCase() === 'sim' || cols[2].trim() === '1')
+      const genotipo = (cols[idxGen] ?? cols[1] ?? '').trim();
+      const testemunha = idxTest >= 0
+        ? (cols[idxTest].trim().toLowerCase() === 'sim' || cols[idxTest].trim() === '1' || cols[idxTest].trim().toLowerCase() === 'yes')
         : false;
       const novo = { plot_id, genotipo, testemunha };
-      for (let j = 1; j <= NUM_AVALIACOES; j++) novo[`nota${j}`] = null;
-      novo.descricao = '';
+      for (let j = 1; j <= NUM_AVALIACOES; j++) {
+        const idxNota = notaIdxs[j];
+        const rawNota = idxNota >= 0 ? String(cols[idxNota] ?? '').trim() : '';
+        const nota = rawNota === '' ? null : parseFloat(rawNota.replace(',', '.'));
+        novo[`nota${j}`] = Number.isFinite(nota) ? nota : null;
+      }
+      novo.descricao = idxDesc >= 0 ? (cols[idxDesc] || '') : '';
       novos.push(novo);
     }
 
@@ -1739,6 +2040,30 @@ function carregarCSV() {
   reader.readAsText(file, 'UTF-8');
 }
 
+function parseCSVLine(line) {
+  const out = [];
+  let cur = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        quoted = !quoted;
+      }
+    } else if ((ch === ',' || ch === ';' || ch === '\t') && !quoted) {
+      out.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
 function csvCampo(valor) {
   const s = String(valor ?? '');
   return `"${s.replace(/"/g, '""')}"`;
@@ -1751,7 +2076,7 @@ function exportarCSV() {
   }
 
   let cab = 'plot_id,genotipo,testemunha';
-  for (let i = 1; i <= NUM_AVALIACOES; i++) cab += `,avaliacao${i}`;
+  for (let i = 1; i <= NUM_AVALIACOES; i++) cab += `,${csvCampo(nomeAvaliacao(i))}`;
   cab += ',descricao';
 
   const csv = cab + '\n' + dados.map(d => {
@@ -1928,6 +2253,8 @@ window.mudarPagina = mudarPagina;
 window.setNumAvaliacoes = setNumAvaliacoes;
 window.setFaixaNotas = setFaixaNotas;
 window.setIdiomaApp = setIdiomaApp;
+window.setNomeAvaliacao = setNomeAvaliacao;
+window.falarGuiaConfiguracao = falarGuiaConfiguracao;
 window.irParaCelula = irParaCelula;
 window.pularParcela = pularParcela;
 window.garantirFocoDigitacao = garantirFocoDigitacao;
@@ -1936,11 +2263,16 @@ window.toggleRede = toggleRede;
 window.toggleManual = toggleManual;
 window.limparDescricao = limparDescricao;
 
+window.addEventListener('resize', atualizarOffsetFixo);
+
 window.addEventListener('load', () => {
+  atualizarOffsetFixo();
   atualizarBadgeModo();
   atualizarToggleRede();
+  atualizarOffsetFixo();
   atualizarUIIdioma();
   atualizarUIFaixaNotas();
+  atualizarNomesAvaliacoesUI();
   configurarDigitacao();
   carregarDados();
   document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
