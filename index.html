@@ -155,7 +155,8 @@ body {
 .current-panel .section-label { margin-top: 0; }
 .current-panel .hero-card { margin-bottom: 8px; padding: 14px 16px 13px; border-radius: 18px; }
 .current-panel .hero-eyebrow { margin-bottom: 4px; }
-.current-panel #plot { font-size: 1.25rem; }
+.current-panel .plot-parcela { font-size: 1.18rem; }
+.current-panel .plot-genotipo { font-size: 0.9rem; }
 .current-panel .notas-container { margin-top: 10px; gap: 8px; }
 .current-panel .nota-individual .valor { width: 46px; height: 46px; border-radius: 14px; font-size: 1.25rem; }
 .section-label {
@@ -239,11 +240,31 @@ input[type="file"] { display: none; }
   margin-bottom: 8px;
 }
 #plot {
-  font-size: 1.5rem;
-  font-weight: 800;
   color: var(--label);
   letter-spacing: 0;
-  line-height: 1.3;
+  line-height: 1.25;
+}
+.plot-parcela {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 1.35rem;
+  font-weight: 850;
+}
+.plot-genotipo {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--label2);
+  overflow-wrap: anywhere;
+}
+.plot-badge {
+  color: #34C759;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 .notas-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .nota-individual { text-align: center; }
@@ -603,10 +624,10 @@ input[type="file"] { display: none; }
   gap: 4px;
   border: none;
   background: transparent;
-  padding: 8px 10px;
+  padding: 8px 6px;
   border-radius: 14px;
   cursor: pointer;
-  min-width: 56px;
+  min-width: 48px;
   min-height: 50px;
   transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1), background 0.15s;
 }
@@ -621,6 +642,49 @@ input[type="file"] { display: none; }
 .bar-btn.manual.ativo .bar-label { color: #fff; }
 .bar-btn.manual.ativo .bar-icon { filter: brightness(100); }
 .bar-btn.reset .bar-label { color: var(--sys-gray); }
+.bar-btn.lock .bar-label { color: var(--label2); }
+
+.pocket-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px);
+  background: #07120b;
+  color: #fff;
+  text-align: center;
+  touch-action: none;
+  user-select: none;
+}
+.pocket-lock.ativo { display: flex; }
+.pocket-title { font-size: 1.25rem; font-weight: 900; letter-spacing: 0; }
+.pocket-status { font-size: 0.86rem; line-height: 1.45; color: rgba(255,255,255,0.72); max-width: 280px; }
+.pocket-unlock {
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 14px 20px;
+  min-width: 210px;
+  font-size: 0.86rem;
+  font-weight: 900;
+  overflow: hidden;
+  position: relative;
+}
+.pocket-unlock::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: rgba(45,184,75,0.38);
+  transition: width 0.12s linear;
+}
+.pocket-unlock.segurando::before { width: 100%; transition: width 2.2s linear; }
+.pocket-unlock span { position: relative; z-index: 1; }
 
 @keyframes nota-pop {
   0% { transform: scale(1); }
@@ -665,11 +729,12 @@ input[type="file"] { display: none; }
 }
 
 @media (max-width: 375px) {
-  .bar-btn { min-width: 46px; padding: 7px 5px; }
+  .bar-btn { min-width: 44px; padding: 7px 4px; }
   .bar-icon { font-size: 1.3rem; }
   .bar-label { font-size: 0.56rem; }
   .nota-individual .valor { width: 46px; height: 46px; font-size: 1.25rem; }
-  #plot { font-size: 1.3rem; }
+  .plot-parcela { font-size: 1.12rem; }
+  .plot-genotipo { font-size: 0.86rem; }
 }
 </style>
 </head>
@@ -823,6 +888,16 @@ input[type="file"] { display: none; }
     <span class="bar-icon">🔄</span>
     <span class="bar-label">Novo</span>
   </button>
+  <button class="bar-btn lock" onclick="ativarModoBolso()">
+    <span class="bar-icon">🔒</span>
+    <span class="bar-label">Bolso</span>
+  </button>
+</div>
+
+<div class="pocket-lock" id="pocketLock" aria-live="polite">
+  <div class="pocket-title">Modo bolso ativo</div>
+  <div class="pocket-status" id="pocketStatus">Toques acidentais bloqueados. A voz continua sendo usada para registrar as notas.</div>
+  <button class="pocket-unlock" id="pocketUnlock" type="button"><span>Segure para desbloquear</span></button>
 </div>
 
 <script>
@@ -1925,7 +2000,7 @@ function atualizarTela() {
   if (current < dados.length) {
     const p = dados[current];
     document.getElementById('plot').innerHTML =
-      `🌿 Parcela <strong>${escHTML(String(p.plot_id))}</strong> &nbsp; ${escHTML(p.genotipo)}${p.testemunha ? ' <span style="color:#34C759;font-size:0.85rem;">● Testemunha</span>' : ''}`;
+      `<span class="plot-parcela">🌿 Parcela <strong>${escHTML(String(p.plot_id))}</strong>${p.testemunha ? ' <span class="plot-badge">● Testemunha</span>' : ''}</span><span class="plot-genotipo">${escHTML(p.genotipo)}</span>`;
     atualizarDisplayNotas();
     atualizarDisplayDescricao();
     const pc = Math.floor(current / POR_PAGINA) + 1;
@@ -2377,8 +2452,86 @@ function configurarDigitacao() {
   window.confirmarNotaManual = finalizar;
 }
 
-function startRecognition() { VozEngine.iniciar(); }
-function stopRecognition() { VozEngine.parar(); }
+let modoBolso = false;
+let timerDesbloqueioBolso = null;
+let wakeLockBolso = null;
+
+async function solicitarWakeLockBolso() {
+  try {
+    if ('wakeLock' in navigator) wakeLockBolso = await navigator.wakeLock.request('screen');
+  } catch (e) {}
+}
+
+function liberarWakeLockBolso() {
+  try { wakeLockBolso?.release?.(); } catch (e) {}
+  wakeLockBolso = null;
+}
+
+function atualizarModoBolsoUI() {
+  const overlay = document.getElementById('pocketLock');
+  if (!overlay) return;
+  overlay.classList.toggle('ativo', modoBolso);
+  const status = document.getElementById('pocketStatus');
+  if (status) status.textContent = rodando
+    ? 'Toques acidentais bloqueados. Ouvindo pelo microfone.'
+    : 'Toques acidentais bloqueados. Toque em Voz se precisar iniciar a escuta depois de desbloquear.';
+}
+
+function ativarModoBolso() {
+  if (!dados.length) {
+    beepErro();
+    document.getElementById('debug').textContent = '⚠️ Carregue um CSV antes do Modo bolso';
+    return;
+  }
+  modoBolso = true;
+  atualizarModoBolsoUI();
+  solicitarWakeLockBolso();
+  document.getElementById('debug').textContent = '🔒 Modo bolso ativo';
+  if (!rodando && modoOnline) {
+    VozEngine.iniciar();
+    setTimeout(() => atualizarModoBolsoUI(), 600);
+  }
+}
+
+function desativarModoBolso() {
+  modoBolso = false;
+  cancelarDesbloqueioBolso();
+  liberarWakeLockBolso();
+  atualizarModoBolsoUI();
+  document.getElementById('debug').textContent = '🔓 Modo bolso desativado';
+}
+
+function iniciarDesbloqueioBolso(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const btn = document.getElementById('pocketUnlock');
+  btn?.classList.add('segurando');
+  clearTimeout(timerDesbloqueioBolso);
+  timerDesbloqueioBolso = setTimeout(() => desativarModoBolso(), 2200);
+}
+
+function cancelarDesbloqueioBolso() {
+  clearTimeout(timerDesbloqueioBolso);
+  timerDesbloqueioBolso = null;
+  document.getElementById('pocketUnlock')?.classList.remove('segurando');
+}
+
+function configurarModoBolso() {
+  const overlay = document.getElementById('pocketLock');
+  const btn = document.getElementById('pocketUnlock');
+  if (!overlay || !btn) return;
+  ['touchstart', 'pointerdown', 'mousedown'].forEach(evt => btn.addEventListener(evt, iniciarDesbloqueioBolso));
+  ['touchend', 'touchcancel', 'pointerup', 'pointercancel', 'pointerleave', 'mouseup', 'mouseleave'].forEach(evt => btn.addEventListener(evt, cancelarDesbloqueioBolso));
+  ['click', 'touchmove', 'pointermove'].forEach(evt => overlay.addEventListener(evt, e => {
+    if (e.target !== btn && !btn.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { passive: false }));
+}
+
+function startRecognition() { VozEngine.iniciar(); atualizarModoBolsoUI(); }
+function stopRecognition() { VozEngine.parar(); atualizarModoBolsoUI(); }
 
 window.carregarCSV = carregarCSV;
 window.startRecognition = startRecognition;
@@ -2398,6 +2551,8 @@ window.solicitarPermissao = solicitarPermissao;
 window.toggleRede = toggleRede;
 window.toggleManual = toggleManual;
 window.limparDescricao = limparDescricao;
+window.ativarModoBolso = ativarModoBolso;
+window.desativarModoBolso = desativarModoBolso;
 
 window.addEventListener('resize', atualizarOffsetFixo);
 
@@ -2410,6 +2565,7 @@ window.addEventListener('load', async () => {
   atualizarUIFaixaNotas();
   atualizarNomesAvaliacoesUI();
   configurarDigitacao();
+  configurarModoBolso();
   const recuperouDados = await carregarDados();
   if (!recuperouDados) document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
   setTimeout(() => garantirFocoDigitacao(), 300);
