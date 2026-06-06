@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en-US">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Field Voice PRO</title>
+<title>GDM Field Voice</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1c3d2a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,23 +12,23 @@
 <meta name="apple-mobile-web-app-title" content="FieldVoice">
 <style>
 :root {
-  --bg: #FFFFFF;
+  --bg: #F0F4F8;
   --card: #FFFFFF;
-  --nav: #163320;
-  --sys-green: #2DB84B;
-  --sys-green-lt: rgba(45,184,75,0.14);
-  --sys-blue: #007AFF;
-  --sys-blue-lt: rgba(0,122,255,0.13);
-  --sys-red: #FF3B30;
-  --sys-orange: #FF9500;
+  --nav: #1D3B5F;
+  --sys-green: #1D3B5F;
+  --sys-green-lt: rgba(127,169,209,0.22);
+  --sys-blue: #1D3B5F;
+  --sys-blue-lt: rgba(127,169,209,0.24);
+  --sys-red: #B3261E;
+  --sys-orange: #C47A21;
   --sys-gray: #8E8E93;
   --sys-gray2: #AEAEB2;
-  --label: #000000;
-  --label2: #3A3A3C;
-  --label3: #636366;
-  --sep: rgba(60,60,67,0.10);
-  --card-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 3px 10px rgba(0,0,0,0.07);
-  --card-shadow-lg: 0 4px 20px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.06);
+  --label: #102438;
+  --label2: #254058;
+  --label3: #5D738A;
+  --sep: rgba(29,59,95,0.12);
+  --card-shadow: 0 1px 2px rgba(29,59,95,0.06), 0 8px 24px rgba(29,59,95,0.08);
+  --card-shadow-lg: 0 10px 34px rgba(29,59,95,0.14), 0 2px 8px rgba(29,59,95,0.08);
   --nav-sticky-offset: 76px;
 }
 
@@ -41,9 +41,39 @@ body {
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
   -webkit-font-smoothing: antialiased;
 }
+body.auth-locked { overflow: hidden; }
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 22px) 18px calc(env(safe-area-inset-bottom) + 22px);
+  background: linear-gradient(160deg, #1D3B5F 0%, #13293F 100%);
+}
+body.auth-locked .auth-screen { display: flex; }
+.auth-card { width: min(420px, 100%); background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.30); }
+.auth-brand { color: #1D3B5F; font-size: 1.05rem; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; }
+.auth-title { color: var(--label); font-size: 1.45rem; font-weight: 900; margin-bottom: 14px; }
+.auth-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 14px; background: rgba(118,118,128,0.12); border-radius: 11px; padding: 3px; }
+.auth-tab { border: none; border-radius: 9px; padding: 9px 4px; background: transparent; color: var(--label2); font-size: 0.74rem; font-weight: 800; }
+.auth-tab.ativo { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.14); color: var(--label); }
+.auth-form { display: grid; gap: 10px; }
+.auth-input { width: 100%; border: 1.5px solid var(--sep); border-radius: 12px; padding: 13px 12px; font-size: 0.94rem; font-weight: 700; color: var(--label); }
+.auth-input:focus { outline: none; border-color: #7FA9D1; box-shadow: 0 0 0 4px rgba(127,169,209,0.18); }
+.auth-primary { border: none; border-radius: 12px; padding: 13px 14px; background: var(--sys-green); color: #fff; font-size: 0.92rem; font-weight: 900; cursor: pointer; }
+.auth-primary:disabled { opacity: 0.55; cursor: default; }
+.auth-msg { min-height: 18px; font-size: 0.76rem; color: var(--label3); line-height: 1.45; }
+.auth-msg.erro { color: var(--sys-red); }
+.auth-msg.ok { color: var(--sys-green); }
+.auth-offline { display: none; border: 1px solid rgba(45,184,75,0.26); border-radius: 12px; padding: 10px 12px; color: var(--label2); background: rgba(45,184,75,0.08); font-size: 0.76rem; line-height: 1.45; }
+.auth-offline.ativo { display: block; }
+.auth-logout { border: none; border-radius: 20px; padding: 4px 8px; background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.9); font-size: 0.62rem; font-weight: 800; display: none; }
+body.authenticated .auth-logout { display: inline-flex; }
 
 .nav-bar {
-  background: linear-gradient(160deg, #1e4530 0%, #163320 100%);
+  background: linear-gradient(160deg, #1D3B5F 0%, #142D49 100%);
   padding: calc(env(safe-area-inset-top) + 12px) 14px 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -55,20 +85,48 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.22);
+  box-shadow: 0 8px 28px rgba(29,59,95,0.25);
 }
 .nav-left { display: contents; }
 .nav-title {
   grid-area: title;
   min-width: 0;
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.gdm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.gdm-logo {
+  width: 62px;
+  height: 74px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+.gdm-product {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gdm-product strong {
+  color: #fff;
+  font-size: 0.94rem;
+  line-height: 1.05;
+}
+.gdm-product span {
+  color: rgba(255,255,255,0.72);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 .nav-sub {
   grid-area: debug;
@@ -90,8 +148,8 @@ body {
   border-radius: 20px;
   letter-spacing: 0.2px;
 }
-.mode-badge.offline { background: rgba(45,184,75,0.25); color: #3dca5e; }
-.mode-badge.web { background: rgba(255,59,48,0.22); color: #ff6b62; }
+.mode-badge.offline { background: rgba(127,169,209,0.22); color: #FFFFFF; }
+.mode-badge.web { background: rgba(240,244,248,0.18); color: #FFFFFF; }
 
 .nav-right {
   grid-area: controls;
@@ -137,10 +195,10 @@ body {
   cursor: pointer;
   transition: background 0.25s, color 0.25s;
 }
-.rede-toggle.online { background: rgba(0,122,255,0.22); color: #5ac8fa; }
+.rede-toggle.online { background: rgba(127,169,209,0.26); color: #FFFFFF; }
 .rede-toggle.offline { background: rgba(142,142,147,0.22); color: #aeaeb2; }
 .rede-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.rede-toggle.online .rede-dot { background: #5ac8fa; }
+.rede-toggle.online .rede-dot { background: #7FA9D1; }
 .rede-toggle.offline .rede-dot { background: #636366; }
 
 .content { padding: 12px 0 4px; }
@@ -171,7 +229,7 @@ body {
 
 .ios-card {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 8px;
   margin: 0 16px 12px;
   box-shadow: var(--card-shadow);
   overflow: hidden;
@@ -211,7 +269,7 @@ body {
 .file-pick-label {
   background: var(--sys-blue-lt);
   color: var(--sys-blue);
-  border-radius: 11px;
+  border-radius: 8px;
   padding: 10px 16px;
   font-size: 0.82rem;
   font-weight: 700;
@@ -225,7 +283,7 @@ input[type="file"] { display: none; }
 
 .hero-card {
   background: var(--card);
-  border-radius: 22px;
+  border-radius: 8px;
   margin: 0 16px 12px;
   padding: 20px 20px 18px;
   box-shadow: var(--card-shadow-lg);
@@ -305,14 +363,14 @@ input[type="file"] { display: none; }
 
 .input-card {
   background: var(--card);
-  border-radius: 18px;
+  border-radius: 8px;
   margin: 0 16px 12px;
   padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
   box-shadow: var(--card-shadow-lg);
-  border: 1.5px solid var(--sys-blue-lt);
+  border: 1.5px solid rgba(127,169,209,0.38);
   animation: slideDown 0.22s cubic-bezier(0.34,1.4,0.64,1) both;
 }
 @keyframes slideDown {
@@ -324,7 +382,7 @@ input[type="file"] { display: none; }
   flex: 1;
   max-width: 80px;
   border: 2px solid var(--sep);
-  border-radius: 13px;
+  border-radius: 8px;
   padding: 12px 8px;
   font-size: 1.7rem;
   font-weight: 800;
@@ -389,7 +447,7 @@ input[type="file"] { display: none; }
 }
 .setup-card {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 8px;
   margin: 0 16px 12px;
   box-shadow: var(--card-shadow);
   overflow: hidden;
@@ -411,8 +469,8 @@ input[type="file"] { display: none; }
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--sys-green-lt);
-  color: var(--sys-green);
+  background: rgba(127,169,209,0.24);
+  color: #1D3B5F;
   font-size: 0.72rem;
   font-weight: 900;
   display: flex;
@@ -421,6 +479,8 @@ input[type="file"] { display: none; }
   flex-shrink: 0;
 }
 .setup-title {
+  flex: 1;
+  min-width: 0;
   font-size: 0.78rem;
   font-weight: 800;
   color: var(--label2);
@@ -435,7 +495,7 @@ input[type="file"] { display: none; }
 .setup-input {
   width: 100%;
   border: 1.5px solid var(--sep);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 9px 7px;
   font-size: 0.86rem;
   font-weight: 800;
@@ -453,7 +513,7 @@ input[type="file"] { display: none; }
 .setup-select {
   width: 100%;
   border: 1.5px solid var(--sep);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 12px 10px;
   font-size: 0.92rem;
   font-weight: 800;
@@ -468,13 +528,17 @@ input[type="file"] { display: none; }
 }
 .guide-btn {
   border: none;
-  border-radius: 11px;
+  border-radius: 8px;
   background: var(--sys-blue-lt);
   color: var(--sys-blue);
   padding: 9px 12px;
   font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
+}
+.tips-btn {
+  background: rgba(29,59,95,0.10);
+  color: #1D3B5F;
 }
 
 @media (min-width: 560px) {
@@ -496,7 +560,7 @@ input[type="file"] { display: none; }
 
 .status-card {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 8px;
   margin: 0 16px 12px;
   padding: 14px 16px;
   display: flex;
@@ -526,7 +590,7 @@ input[type="file"] { display: none; }
 
 #gridContainer {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 8px;
   margin: 0 16px 12px;
   overflow: hidden;
   box-shadow: var(--card-shadow);
@@ -607,7 +671,7 @@ input[type="file"] { display: none; }
   left: 0;
   right: 0;
   z-index: 200;
-  background: rgba(252,252,254,0.92);
+  background: rgba(240,244,248,0.94);
   -webkit-backdrop-filter: saturate(200%) blur(28px);
   backdrop-filter: saturate(200%) blur(28px);
   border-top: 0.5px solid rgba(60,60,67,0.18);
@@ -625,7 +689,7 @@ input[type="file"] { display: none; }
   border: none;
   background: transparent;
   padding: 8px 6px;
-  border-radius: 14px;
+  border-radius: 8px;
   cursor: pointer;
   min-width: 48px;
   min-height: 50px;
@@ -634,11 +698,11 @@ input[type="file"] { display: none; }
 .bar-btn:active { transform: scale(0.85); }
 .bar-icon { font-size: 1.5rem; line-height: 1; }
 .bar-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0; }
-.bar-btn.primary .bar-label { color: var(--sys-green); }
+.bar-btn.primary .bar-label { color: #1D3B5F; }
 .bar-btn.danger .bar-label { color: var(--sys-red); }
 .bar-btn.export .bar-label { color: var(--sys-orange); }
-.bar-btn.manual .bar-label { color: var(--sys-blue); }
-.bar-btn.manual.ativo { background: var(--sys-blue); }
+.bar-btn.manual .bar-label { color: #1D3B5F; }
+.bar-btn.manual.ativo { background: #1D3B5F; }
 .bar-btn.manual.ativo .bar-label { color: #fff; }
 .bar-btn.manual.ativo .bar-icon { filter: brightness(100); }
 .bar-btn.reset .bar-label { color: var(--sys-gray); }
@@ -727,6 +791,86 @@ input[type="file"] { display: none; }
   min-height: 44px;
   min-width: 44px;
 }
+.tips-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px 14px calc(env(safe-area-inset-bottom) + 16px);
+  background: rgba(0,0,0,0.48);
+}
+.tips-modal.ativo { display: flex; }
+.tips-sheet {
+  width: min(680px, 100%);
+  max-height: min(82vh, 760px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow-lg);
+  padding: 18px;
+}
+.tips-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.tips-title {
+  color: var(--label);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+.tips-close {
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  background: rgba(118,118,128,0.12);
+  color: var(--label2);
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.tips-lang {
+  border-top: 1px solid var(--sep);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.tips-lang:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+.tips-lang h3 {
+  color: #1D3B5F;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.tips-lang ol {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
+  color: var(--label2);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.tips-lang li::marker { font-weight: 900; color: #1D3B5F; }
+.tips-commands {
+  display: grid;
+  gap: 5px;
+  margin-top: 6px;
+}
+.tips-commands div {
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: rgba(29,59,95,0.06);
+}
+.tips-commands strong { color: var(--label); }
 
 @media (max-width: 375px) {
   .bar-btn { min-width: 44px; padding: 7px 4px; }
@@ -739,33 +883,38 @@ input[type="file"] { display: none; }
 </style>
 </head>
 <body>
-
 <div class="nav-bar">
   <div class="nav-left">
-    <span class="nav-title">🌾 Field Voice PRO</span>
-    <span class="nav-sub" id="debug" aria-live="polite">Aguardando CSV...</span>
+    <span class="nav-title">
+      <span class="gdm-brand">
+        <img class="gdm-logo" src="data:image/png;base64,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" alt="GDM">
+        <span class="gdm-product"><strong>Field Voice</strong><span>Global demo</span></span>
+      </span>
+    </span>
+    <span class="nav-sub" id="debug" aria-live="polite">Waiting for CSV...</span>
   </div>
   <div class="nav-right">
-    <span id="badgeModo" class="mode-badge offline">carregando...</span>
+    <span id="badgeModo" class="mode-badge offline">loading...</span>
     <button id="toggleRede" class="rede-toggle offline" onclick="toggleRede()">
       <span class="rede-dot"></span>
       <span id="redeLabel">OFFLINE</span>
     </button>
     <div class="voice-pill" aria-live="polite">
       <span class="status-dot" id="statusDot"></span>
-      <span id="status">Parado</span>
+      <span id="status">Idle</span>
     </div>
   </div>
 </div>
 
 <div class="content">
-  <p class="section-label">Configuração guiada</p>
+  <p class="section-label">Trial Setup</p>
   <div class="setup-card">
     <div class="setup-step">
       <div class="setup-head">
         <span class="setup-num">1</span>
-        <span class="setup-title">Número de avaliações</span>
-        <button class="guide-btn" onclick="falarGuiaConfiguracao()">Guia</button>
+        <span class="setup-title">Number of traits</span>
+        <button class="guide-btn" onclick="falarGuiaConfiguracao()">Guide</button>
+        <button class="guide-btn tips-btn" onclick="abrirTips()">Tips</button>
       </div>
       <div class="seg-ctrl">
         <button class="seg-btn" onclick="setNumAvaliacoes(1)">1</button>
@@ -779,7 +928,7 @@ input[type="file"] { display: none; }
     <div class="setup-step">
       <div class="setup-head">
         <span class="setup-num">2</span>
-        <span class="setup-title">Nome das avaliações</span>
+        <span class="setup-title">Trait labels</span>
       </div>
       <div class="setup-grid" id="avaliacaoNomesGrid"></div>
     </div>
@@ -787,15 +936,15 @@ input[type="file"] { display: none; }
     <div class="setup-step">
       <div class="setup-head">
         <span class="setup-num">3</span>
-        <span class="setup-title">Mínimo e máximo</span>
+        <span class="setup-title">Score range</span>
       </div>
       <div class="range-row" style="padding:0;">
         <div class="range-field">
-          <label for="notaMinInput">Mínima</label>
+          <label for="notaMinInput">Minimum</label>
           <input type="number" id="notaMinInput" inputmode="numeric" value="1" onchange="setFaixaNotas()">
         </div>
         <div class="range-field">
-          <label for="notaMaxInput">Máxima</label>
+          <label for="notaMaxInput">Maximum</label>
           <input type="number" id="notaMaxInput" inputmode="numeric" value="9" onchange="setFaixaNotas()">
         </div>
       </div>
@@ -804,27 +953,27 @@ input[type="file"] { display: none; }
     <div class="setup-step">
       <div class="setup-head">
         <span class="setup-num">4</span>
-        <span class="setup-title">Idioma da voz</span>
+        <span class="setup-title">Voice language</span>
       </div>
       <select id="idiomaSelect" class="setup-select" onchange="setIdiomaApp()">
-        <option value="pt">Português</option>
+        <option value="pt">Portuguese</option>
         <option value="en">English</option>
-        <option value="es">Español</option>
+        <option value="es">Spanish</option>
       </select>
     </div>
 
     <div class="setup-step">
       <div class="setup-head">
         <span class="setup-num">5</span>
-        <span class="setup-title">Carregar CSV</span>
+        <span class="setup-title">Load CSV</span>
       </div>
       <div class="setup-file-row">
         <div class="file-info">
-          <div class="file-title">Arquivo de parcelas</div>
-          <div class="file-desc" id="fileLabel">plot_id · genotipo · testemunha</div>
+          <div class="file-title">Trial plot file</div>
+          <div class="file-desc" id="fileLabel">plot_id · genotype · check</div>
         </div>
         <label class="file-pick-label">
-          Selecionar
+          Select
           <input type="file" id="fileInput" accept=".csv" onchange="carregarCSV()">
         </label>
       </div>
@@ -832,10 +981,10 @@ input[type="file"] { display: none; }
   </div>
 
 <div class="current-panel">
-    <p class="section-label">Parcela atual</p>
+    <p class="section-label">Current plot</p>
     <div class="hero-card">
-    <div class="hero-eyebrow">em avaliação</div>
-    <div id="plot">📋 Nenhum CSV carregado</div>
+    <div class="hero-eyebrow">being scored</div>
+    <div id="plot">📋 No CSV loaded</div>
     <div id="notasDisplay" class="notas-container"></div>
     <div id="descricaoCard" class="descricao-card">
       <span class="descricao-icon">📝</span>
@@ -846,35 +995,35 @@ input[type="file"] { display: none; }
   </div>
 
   <div class="input-card" id="manualCard" style="display:none;">
-    <span class="input-label">⌨️ Nota</span>
+    <span class="input-label">⌨️ Score</span>
     <input type="text" id="notaDigitada" inputmode="numeric" pattern="[0-9]*" placeholder="-" autocomplete="off">
     <button class="manual-ok-btn" onclick="confirmarNotaManual()">OK</button>
   </div>
 
-<p class="section-label" id="gridLabel" style="display:none">Parcelas</p>
+<p class="section-label" id="gridLabel" style="display:none">Plots</p>
   <div id="gridContainer" style="display:none">
-    <div class="grid-header-bar">📋 Lista de parcelas - toque para editar</div>
+    <div class="grid-header-bar">📋 Plot list - tap a score cell to edit</div>
     <div id="paginacao" class="pagina-botoes"></div>
     <div class="scroll-container" id="scrollContainer">
       <table class="grid-table" id="gridTable">
         <thead id="gridHeader">
-          <tr><th>Parcela</th><th>Nota</th></tr>
+          <tr><th>Plot</th><th>Score</th></tr>
         </thead>
         <tbody id="gridBody"></tbody>
       </table>
     </div>
-    <div class="grid-info">🔹 Verde = Testemunha &nbsp;·&nbsp; 🔸 Azul = célula ativa</div>
+    <div class="grid-info">🔹 Green = Check &nbsp;·&nbsp; 🔸 Blue = active score cell</div>
   </div>
 </div>
 
 <div class="bottom-bar">
   <button class="bar-btn primary" onclick="startRecognition()">
     <span class="bar-icon">🎤</span>
-    <span class="bar-label">Voz</span>
+    <span class="bar-label">Voice</span>
   </button>
   <button class="bar-btn danger" onclick="stopRecognition()">
     <span class="bar-icon">⛔</span>
-    <span class="bar-label">Parar</span>
+    <span class="bar-label">Stop</span>
   </button>
   <button class="bar-btn manual" id="btnManual" onclick="toggleManual()">
     <span class="bar-icon">⌨️</span>
@@ -882,25 +1031,278 @@ input[type="file"] { display: none; }
   </button>
   <button class="bar-btn export" onclick="exportarCSV()">
     <span class="bar-icon">💾</span>
-    <span class="bar-label">Exportar</span>
+    <span class="bar-label">Export</span>
   </button>
   <button class="bar-btn reset" onclick="resetarExperimento()">
     <span class="bar-icon">🔄</span>
-    <span class="bar-label">Novo</span>
+    <span class="bar-label">New</span>
   </button>
   <button class="bar-btn lock" onclick="ativarModoBolso()">
     <span class="bar-icon">🔒</span>
-    <span class="bar-label">Bolso</span>
+    <span class="bar-label">Pocket</span>
   </button>
 </div>
 
 <div class="pocket-lock" id="pocketLock" aria-live="polite">
-  <div class="pocket-title">Modo bolso ativo</div>
-  <div class="pocket-status" id="pocketStatus">Toques acidentais bloqueados. A voz continua sendo usada para registrar as notas.</div>
-  <button class="pocket-unlock" id="pocketUnlock" type="button"><span>Segure para desbloquear</span></button>
+  <div class="pocket-title">Pocket mode active</div>
+  <div class="pocket-status" id="pocketStatus">Accidental touches are locked. Voice input remains available for scoring.</div>
+  <button class="pocket-unlock" id="pocketUnlock" type="button"><span>Hold to unlock</span></button>
+</div>
+
+<div class="tips-modal" id="tipsModal" role="dialog" aria-modal="true" aria-labelledby="tipsTitle" onclick="fecharTips(event)">
+  <div class="tips-sheet" onclick="event.stopPropagation()">
+    <div class="tips-head">
+      <div class="tips-title" id="tipsTitle">Field Voice Tips</div>
+      <button class="tips-close" type="button" onclick="fecharTips()" aria-label="Close tips">×</button>
+    </div>
+
+    <section class="tips-lang">
+      <h3>Português</h3>
+      <ol>
+        <li>Este app funciona apenas online. Garanta que você tenha acesso à internet, por Wi-Fi ou dados móveis.</li>
+        <li>Para falar uma nota, diga "Nota" antes para garantir o salvamento adequado de cada avaliação.</li>
+        <li>Outras funcionalidades importantes que ajudam:
+          <div class="tips-commands">
+            <div><strong>"Próxima", "Pular" ou "Pula"</strong> - vai para a próxima avaliação/parcela.</div>
+            <div><strong>"Voltar" ou "Volta"</strong> - volta uma avaliação/parcela.</div>
+            <div><strong>"Parcela atual"</strong> - informa em qual parcela você está atualmente.</div>
+            <div><strong>"Parcela 2489"</strong> - pula para esta parcela; fale o número da parcela desejada.</div>
+            <div><strong>"Descrição"</strong> - ativa o modo de descrição a nível de parcela.</div>
+          </div>
+        </li>
+        <li>Se você fechar o app, não se preocupe: quando abrir novamente, os dados estarão salvos.</li>
+        <li>Qualquer dúvida ou sugestão, envie um email para ipaula@gdmseeds.com.</li>
+      </ol>
+    </section>
+
+    <section class="tips-lang">
+      <h3>English</h3>
+      <ol>
+        <li>This app works online only. Make sure you have internet access through Wi-Fi or mobile data.</li>
+        <li>When speaking a score, say "Score" first to help ensure each trait score is saved correctly.</li>
+        <li>Other helpful commands:
+          <div class="tips-commands">
+            <div><strong>"Next", "Skip" or "Advance"</strong> - moves to the next trait/plot.</div>
+            <div><strong>"Back" or "Previous"</strong> - goes back one trait/plot.</div>
+            <div><strong>"Current plot"</strong> - tells you which plot you are currently scoring.</div>
+            <div><strong>"Plot 2489"</strong> - jumps to that plot; say the plot number you want.</div>
+            <div><strong>"Description"</strong> - activates plot-level description mode.</div>
+          </div>
+        </li>
+        <li>If you close the app, do not worry: when you open it again, your data will still be saved.</li>
+        <li>Questions or suggestions: email ipaula@gdmseeds.com.</li>
+      </ol>
+    </section>
+
+    <section class="tips-lang">
+      <h3>Español</h3>
+      <ol>
+        <li>Esta app funciona solo en línea. Asegúrate de tener acceso a internet por Wi-Fi o datos móviles.</li>
+        <li>Para dictar una calificación, di "Nota" antes para ayudar a guardar correctamente cada evaluación.</li>
+        <li>Otros comandos útiles:
+          <div class="tips-commands">
+            <div><strong>"Siguiente", "Saltar" o "Avanzar"</strong> - va a la siguiente evaluación/parcela.</div>
+            <div><strong>"Volver" o "Anterior"</strong> - vuelve una evaluación/parcela.</div>
+            <div><strong>"Parcela actual"</strong> - indica en qué parcela estás actualmente.</div>
+            <div><strong>"Parcela 2489"</strong> - salta a esa parcela; di el número de parcela que deseas.</div>
+            <div><strong>"Descripción"</strong> - activa el modo de descripción a nivel de parcela.</div>
+          </div>
+        </li>
+        <li>Si cierras la app, no te preocupes: cuando la abras de nuevo, los datos seguirán guardados.</li>
+        <li>Preguntas o sugerencias: envía un email a ipaula@gdmseeds.com.</li>
+      </ol>
+    </section>
+  </div>
 </div>
 
 <script>
+const FIREBASE_CONFIG = {
+  apiKey: '',
+  authDomain: '',
+  projectId: '',
+  appId: ''
+};
+const AUTH_SESSION_KEY = 'fieldVoiceAuthSession';
+let firebaseAuth = null;
+let authMode = 'login';
+
+function firebaseConfigPreenchida() {
+  return Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.authDomain && FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.appId);
+}
+
+function setAuthMsg(texto, tipo = '') {
+  const msg = document.getElementById('authMsg');
+  if (!msg) return;
+  msg.className = `auth-msg ${tipo}`.trim();
+  msg.textContent = texto || '';
+}
+
+function setAuthMode(modo) {
+  authMode = modo;
+  const cfg = {
+    login: ['Sign in', 'Sign in', true],
+    signup: ['Create account', 'Create account', true],
+    reset: ['Reset password', 'Send reset email', false]
+  }[modo] || ['Sign in', 'Sign in', true];
+  document.getElementById('authTitle').textContent = cfg[0];
+  document.getElementById('authPrimary').textContent = cfg[1];
+  document.getElementById('authPassword').style.display = cfg[2] ? 'block' : 'none';
+  document.getElementById('authTabLogin').classList.toggle('ativo', modo === 'login');
+  document.getElementById('authTabSignup').classList.toggle('ativo', modo === 'signup');
+  document.getElementById('authTabReset').classList.toggle('ativo', modo === 'reset');
+  setAuthMsg('');
+}
+
+function sessaoAuthLocal() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || 'null');
+  } catch (e) {
+    return null;
+  }
+}
+
+function salvarSessaoAuthLocal(user) {
+  if (!user) return;
+  try {
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+      uid: user.uid,
+      email: user.email || '',
+      savedAt: Date.now()
+    }));
+  } catch (e) {}
+}
+
+function limparSessaoAuthLocal() {
+  try { localStorage.removeItem(AUTH_SESSION_KEY); } catch (e) {}
+}
+
+function liberarAppAutenticado(user, offline = false) {
+  document.body.classList.remove('auth-locked');
+  document.body.classList.add('authenticated');
+  const email = user?.email || 'authenticated user';
+  const debug = document.getElementById('debug');
+  if (debug) debug.textContent = offline ? `🔐 Offline session: ${email}` : `🔐 ${email}`;
+  atualizarOffsetFixo?.();
+}
+
+function bloquearAppAuth(mensagem) {
+  document.body.classList.add('auth-locked');
+  document.body.classList.remove('authenticated');
+  setAuthMsg(mensagem, mensagem ? 'erro' : '');
+  atualizarOffsetFixo?.();
+}
+
+function iniciarAuthFirebase() {
+  const sessaoLocal = sessaoAuthLocal();
+  document.getElementById('authOfflineMsg')?.classList.toggle('ativo', Boolean(sessaoLocal));
+
+  if (!firebaseConfigPreenchida()) {
+    if (sessaoLocal && !navigator.onLine) {
+      liberarAppAutenticado(sessaoLocal, true);
+      return Promise.resolve(true);
+    }
+    bloquearAppAuth('Configure FIREBASE_CONFIG in the HTML to enable sign-in, account creation, and password reset.');
+    return Promise.resolve(false);
+  }
+
+  if (!window.firebase?.auth) {
+    if (sessaoLocal) {
+      liberarAppAutenticado(sessaoLocal, true);
+      return Promise.resolve(true);
+    }
+    bloquearAppAuth('Firebase did not load. Connect to the internet to sign in.');
+    return Promise.resolve(false);
+  }
+
+  try {
+    const app = firebase.apps?.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseAuth = firebase.auth(app);
+    firebaseAuth.languageCode = 'pt-BR';
+    firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+  } catch (e) {
+    bloquearAppAuth('Could not start Firebase Auth. Check the configuration.');
+    return Promise.resolve(false);
+  }
+
+  return new Promise(resolve => {
+    firebaseAuth.onAuthStateChanged(user => {
+      if (user) {
+        salvarSessaoAuthLocal(user);
+        liberarAppAutenticado(user, false);
+        resolve(true);
+      } else if (!navigator.onLine && sessaoLocal) {
+        liberarAppAutenticado(sessaoLocal, true);
+        resolve(true);
+      } else {
+        bloquearAppAuth('Sign in to continue.');
+        resolve(false);
+      }
+    }, () => {
+      if (sessaoLocal) {
+        liberarAppAutenticado(sessaoLocal, true);
+        resolve(true);
+      } else {
+        bloquearAppAuth('Could not validate sign-in.');
+        resolve(false);
+      }
+    });
+  });
+}
+
+async function executarAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const senha = document.getElementById('authPassword').value;
+  const btn = document.getElementById('authPrimary');
+  if (!email) {
+    setAuthMsg('Enter an email address.', 'erro');
+    return;
+  }
+  if (authMode !== 'reset' && senha.length < 6) {
+    setAuthMsg('Password must be at least 6 characters.', 'erro');
+    return;
+  }
+  if (!firebaseConfigPreenchida()) {
+    setAuthMsg('Fill FIREBASE_CONFIG before using Firebase Auth.', 'erro');
+    return;
+  }
+  if (!firebaseAuth) await iniciarAuthFirebase();
+  if (!firebaseAuth) return;
+
+  btn.disabled = true;
+  setAuthMsg('Connecting...');
+  try {
+    if (authMode === 'signup') {
+      await firebaseAuth.createUserWithEmailAndPassword(email, senha);
+      setAuthMsg('Account created.', 'ok');
+    } else if (authMode === 'reset') {
+      await firebaseAuth.sendPasswordResetEmail(email);
+      setAuthMsg('Password reset email sent.', 'ok');
+    } else {
+      await firebaseAuth.signInWithEmailAndPassword(email, senha);
+      setAuthMsg('Signed in.', 'ok');
+    }
+  } catch (e) {
+    setAuthMsg(mensagemErroAuth(e), 'erro');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function mensagemErroAuth(e) {
+  const code = e?.code || '';
+  if (code.includes('invalid-email')) return 'Invalid email address.';
+  if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) return 'Incorrect email or password.';
+  if (code.includes('email-already-in-use')) return 'This email already has an account.';
+  if (code.includes('weak-password')) return 'Weak password. Use at least 6 characters.';
+  if (code.includes('network-request-failed')) return 'No connection to validate sign-in.';
+  return 'Could not complete authentication.';
+}
+
+async function logoutFirebase() {
+  limparSessaoAuthLocal();
+  try { await firebaseAuth?.signOut(); } catch (e) {}
+  bloquearAppAuth('Session ended.');
+}
 const isNative = () =>
   window.Capacitor &&
   typeof window.Capacitor.isNativePlatform === 'function' &&
@@ -915,10 +1317,10 @@ function atualizarBadgeModo() {
   const b = document.getElementById('badgeModo');
   if (isNative()) {
     b.className = 'mode-badge offline';
-    b.textContent = '📴 offline nativo';
+    b.textContent = '📴 native offline';
   } else {
     b.className = 'mode-badge web';
-    b.textContent = '🌐 modo web';
+    b.textContent = '🌐 web mode';
   }
 }
 
@@ -926,7 +1328,7 @@ function setStatusVoz(ativado) {
   const dot = document.getElementById('statusDot');
   const status = document.getElementById('status');
   if (dot) dot.classList.toggle('active', ativado);
-  if (status) status.textContent = ativado ? 'Ouvindo' : 'Parado';
+  if (status) status.textContent = ativado ? 'Listening' : 'Idle';
 }
 
 let NUM_AVALIACOES = 5;
@@ -1052,14 +1454,19 @@ function fraseParcelaAtual(incluirParcela = true) {
   return partes.join('. ');
 }
 
-function falarParcelaSeNecessario() {
+function falarParcelaSeNecessario(virouBatida = false) {
   if (!dados.length || current >= dados.length || !modoOnline) return;
   const d = dados[current];
   if (d.testemunha) {
-    falarTexto(fraseParcelaAtual(d.plot_id % 10 === 0), 1.28);
-  } else if (d.plot_id % 10 === 0) {
+    falarTexto(fraseParcelaAtual(virouBatida), 1.28);
+  } else if (virouBatida) {
     falarTexto(`${cfgIdioma().plot} ${d.plot_id}`, 1.35);
   }
+}
+
+function deveAvisarViradaParcela(d = dados[current]) {
+  const parcela = Number(d?.plot_id);
+  return Number.isInteger(parcela) && parcela > 1 && parcela % 10 === 1;
 }
 
 function falarParcelaAtual() {
@@ -1095,7 +1502,7 @@ let NOTA_MAX = DEFAULT_NOTA_MAX;
 let FAIXA_NOTAS_PERSONALIZADA = false;
 let IDIOMA_APP = 'pt';
 
-const APP_VERSION = '2026-05-08-guided-eval-names-1';
+const APP_VERSION = '2026-06-03-gdm-global-demo-1';
 
 const IDIOMAS = {
   pt: {
@@ -1103,9 +1510,9 @@ const IDIOMAS = {
     speech: 'pt-BR',
     confirm: 'Entendi.',
     plot: 'Parcela',
-    witness: 'Testemunha, genótipo',
-    notFound: n => `Parcela ${n} não encontrada`,
-    invalid: 'Não válido',
+    witness: 'Check, genotype',
+    notFound: n => `Plot ${n} not found`,
+    invalid: 'Not valid',
     offline: 'Offline. Use teclado.',
     rangeSet: 'Faixa de notas',
     commands: {
@@ -1183,8 +1590,8 @@ function atualizarUIFaixaNotas() {
 
   if (minInp) minInp.value = NOTA_MIN;
   if (maxInp) maxInp.value = NOTA_MAX;
-  if (label) label.textContent = `⌨️ Nota ${NOTA_MIN}-${NOTA_MAX}`;
-  if (hint) hint.innerHTML = `nota ${NOTA_MIN}-${NOTA_MAX}<br>offline: teclado`;
+  if (label) label.textContent = `⌨️ Score ${NOTA_MIN}-${NOTA_MAX}`;
+  if (hint) hint.innerHTML = `score ${NOTA_MIN}-${NOTA_MAX}<br>offline: keyboard`;
   if (notaInp) {
     notaInp.placeholder = `${NOTA_MIN}-${NOTA_MAX}`;
     notaInp.setAttribute('maxlength', String(Math.max(String(NOTA_MIN).length, String(NOTA_MAX).length, 2)));
@@ -1201,7 +1608,7 @@ function atualizarNomesAvaliacoesUI() {
   if (!grid) return;
   let html = '';
   for (let i = 1; i <= NUM_AVALIACOES; i++) {
-    html += `<input class="setup-input" maxlength="5" value="${escHTML(nomeAvaliacao(i))}" oninput="setNomeAvaliacao(${i}, this.value)" aria-label="Avaliação ${i}">`;
+    html += `<input class="setup-input" maxlength="5" value="${escHTML(nomeAvaliacao(i))}" oninput="setNomeAvaliacao(${i}, this.value)" aria-label="Trait ${i}">`;
   }
   grid.innerHTML = html;
 }
@@ -1215,7 +1622,7 @@ function setNomeAvaliacao(idx, valor) {
 function atualizarUIIdioma() {
   const sel = document.getElementById('idiomaSelect');
   if (sel) sel.value = IDIOMA_APP;
-  document.documentElement.lang = cfgIdioma().html;
+  document.documentElement.lang = 'en-US';
 }
 
 function setIdiomaApp() {
@@ -1223,36 +1630,45 @@ function setIdiomaApp() {
   IDIOMA_APP = IDIOMAS[sel?.value] ? sel.value : 'pt';
   atualizarUIIdioma();
   salvarDados();
-  document.getElementById('debug').textContent = `✅ Idioma: ${cfgIdioma().speech}`;
+  document.getElementById('debug').textContent = `✅ Voice language: ${cfgIdioma().speech}`;
+}
+
+function abrirTips() {
+  document.getElementById('tipsModal')?.classList.add('ativo');
+}
+
+function fecharTips(event) {
+  if (event && event.target !== document.getElementById('tipsModal')) return;
+  document.getElementById('tipsModal')?.classList.remove('ativo');
 }
 
 function falarGuiaConfiguracao() {
-  falarAvisoLocal('Número de avaliações. Escolher nomes. Escolher máximo e mínimo. Escolher idioma. Carregar CSV. Pronto.', 1.28);
+  falarAvisoLocal('Number of traits. Choose trait labels. Choose minimum and maximum scores. Choose voice language. Load CSV. Ready.', 1.28);
 }
 
 function processarGuiaConfiguracao(raw) {
-  if (raw.includes('numero de avaliacoes') || raw.includes('número de avaliações')) {
-    falarAvisoLocal(`Etapa 1. Escolha de 1 a 5 avaliações por parcela. Atual: ${NUM_AVALIACOES}.`, 1.28);
+  if (raw.includes('number of traits') || raw.includes('numero de avaliacoes') || raw.includes('número de avaliações')) {
+    falarAvisoLocal(`Step 1. Choose 1 to 5 trait scores per plot. Current: ${NUM_AVALIACOES}.`, 1.28);
     return true;
   }
-  if (raw.includes('escolher nomes') || raw.includes('nome das avaliacoes') || raw.includes('nomes das avaliacoes')) {
-    falarAvisoLocal('Etapa 2. Defina nomes curtos para as avaliações, com até cinco caracteres.', 1.28);
+  if (raw.includes('trait labels') || raw.includes('choose labels') || raw.includes('escolher nomes') || raw.includes('nome das avaliacoes') || raw.includes('nomes das avaliacoes')) {
+    falarAvisoLocal('Step 2. Define short trait labels with up to five characters.', 1.28);
     return true;
   }
-  if (raw.includes('max e min') || raw.includes('min e max') || raw.includes('maximo e minimo') || raw.includes('minimo e maximo')) {
-    falarAvisoLocal(`Etapa 3. Defina mínimo e máximo. Atual: ${NOTA_MIN} a ${NOTA_MAX}.`, 1.28);
+  if (raw.includes('score range') || raw.includes('max e min') || raw.includes('min e max') || raw.includes('maximo e minimo') || raw.includes('minimo e maximo')) {
+    falarAvisoLocal(`Step 3. Define minimum and maximum scores. Current: ${NOTA_MIN} to ${NOTA_MAX}.`, 1.28);
     return true;
   }
-  if (raw.includes('escolher idioma') || raw.includes('idioma da voz')) {
-    falarAvisoLocal(`Etapa 4. Escolha o idioma da voz. Atual: ${cfgIdioma().speech}.`, 1.28);
+  if (raw.includes('voice language') || raw.includes('escolher idioma') || raw.includes('idioma da voz')) {
+    falarAvisoLocal(`Step 4. Choose the voice language. Current: ${cfgIdioma().speech}.`, 1.28);
     return true;
   }
-  if (raw.includes('carregar csv') || raw.includes('subir csv')) {
-    falarAvisoLocal('Etapa 5. Carregue o CSV de parcelas.', 1.28);
+  if (raw.includes('load csv') || raw.includes('carregar csv') || raw.includes('subir csv')) {
+    falarAvisoLocal('Step 5. Load the trial plot CSV.', 1.28);
     return true;
   }
   if (raw.includes('pronto')) {
-    falarAvisoLocal(`Pronto. ${NUM_AVALIACOES} avaliações. Notas de ${NOTA_MIN} a ${NOTA_MAX}. Idioma ${cfgIdioma().speech}.`, 1.28);
+    falarAvisoLocal(`Ready. ${NUM_AVALIACOES} trait scores. Score range ${NOTA_MIN} to ${NOTA_MAX}. Voice language ${cfgIdioma().speech}.`, 1.28);
     return true;
   }
   return false;
@@ -1275,7 +1691,7 @@ function setFaixaNotas() {
   FAIXA_NOTAS_PERSONALIZADA = true;
   atualizarUIFaixaNotas();
   salvarDados();
-  document.getElementById('debug').textContent = `✅ ${cfgIdioma().rangeSet}: ${NOTA_MIN}-${NOTA_MAX}`;
+  document.getElementById('debug').textContent = `✅ Score range: ${NOTA_MIN}-${NOTA_MAX}`;
 }
 
 function numeroPortuguesParaInteiro(texto) {
@@ -1422,28 +1838,16 @@ function extrairNotaVoz(raw) {
   return null;
 }
 
-let ultimoComandoVoz = '';
-let ultimoComandoVozMs = 0;
-const JANELA_DEDUP_VOZ_MS = 900;
-
 function receberComandoVoz(texto) {
-  const assinatura = normalizarTextoVoz(texto);
-  const agora = Date.now();
-  if (assinatura && assinatura === ultimoComandoVoz && agora - ultimoComandoVozMs < JANELA_DEDUP_VOZ_MS) {
-    return;
-  }
-  ultimoComandoVoz = assinatura;
-  ultimoComandoVozMs = agora;
   processarComando(texto);
 }
 
 function limparDedupVoz() {
-  ultimoComandoVoz = '';
-  ultimoComandoVozMs = 0;
+  return;
 }
 
 function limparComandoVozSemLiberarNota() {
-  if (ultimoComandoVoz) ultimoComandoVozMs = Date.now();
+  return;
 }
 
 window.addEventListener('online', () => {
@@ -1457,8 +1861,8 @@ window.addEventListener('offline', () => {
   falarAvisoLocal(cfgIdioma().offline, 1.35);
   setTimeout(() => {
     if (rodando) VozEngine.parar();
-    document.getElementById('status').textContent = 'Parado';
-    document.getElementById('debug').textContent = `📴 ${cfgIdioma().offline}`;
+    document.getElementById('status').textContent = 'Idle';
+    document.getElementById('debug').textContent = '📴 Offline. Use keyboard.';
   }, 0);
 });
 
@@ -1489,7 +1893,7 @@ const VozEngine = {
     const plugin = window.Capacitor.Plugins.SpeechRecognition;
     rodando = true;
     setStatusVoz(true);
-    document.getElementById('status').textContent = 'Ouvindo';
+    document.getElementById('status').textContent = 'Listening';
 
     while (ativo) {
       try {
@@ -1514,13 +1918,13 @@ const VozEngine = {
 
     rodando = false;
     setStatusVoz(false);
-    document.getElementById('status').textContent = 'Parado';
+    document.getElementById('status').textContent = 'Idle';
   },
 
   async iniciarNativo() {
     const plugin = window.Capacitor?.Plugins?.SpeechRecognition;
     if (!plugin) {
-      document.getElementById('debug').textContent = '❌ Plugin não encontrado';
+    document.getElementById('debug').textContent = '❌ Plugin not found';
       return;
     }
 
@@ -1528,7 +1932,7 @@ const VozEngine = {
     if (perm.speechRecognition !== 'granted') {
       const req = await plugin.requestPermissions();
       if (req.speechRecognition !== 'granted') {
-        document.getElementById('debug').textContent = '❌ Permissão negada';
+        document.getElementById('debug').textContent = '❌ Permission denied';
         beepErro();
         return;
       }
@@ -1550,7 +1954,7 @@ const VozEngine = {
   iniciarWeb() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      alert('Navegador sem suporte a voz');
+      alert('This browser does not support speech recognition');
       return;
     }
 
@@ -1563,14 +1967,14 @@ const VozEngine = {
     this._webRec.onstart = () => {
       rodando = true;
       setStatusVoz(true);
-      document.getElementById('status').textContent = 'Ouvindo';
+      document.getElementById('status').textContent = 'Listening';
     };
     this._webRec.onerror = (e) => {
       if (e.error === 'not-allowed') {
         ativo = false;
         rodando = false;
         setStatusVoz(false);
-        document.getElementById('status').textContent = 'Parado';
+        document.getElementById('status').textContent = 'Idle';
       }
     };
     this._webRec.onresult = (e) => {
@@ -1598,12 +2002,12 @@ const VozEngine = {
     if (rodando) return;
     if (!dados.length) {
       beepErro();
-      document.getElementById('debug').textContent = '⚠️ Carregue um CSV primeiro';
+      document.getElementById('debug').textContent = '⚠️ Load a CSV first';
       return;
     }
     if (!modoOnline) {
       document.getElementById('debug').textContent = '📴 Offline: use o teclado manual';
-      document.getElementById('status').textContent = 'Parado';
+      document.getElementById('status').textContent = 'Idle';
       setStatusVoz(false);
       if (document.getElementById('manualCard').style.display === 'none') toggleManual();
       return;
@@ -1616,7 +2020,7 @@ const VozEngine = {
     if (isNative()) this.pararNativo();
     else this.pararWeb();
     setStatusVoz(false);
-    document.getElementById('status').textContent = 'Parado';
+    document.getElementById('status').textContent = 'Idle';
   }
 };
 
@@ -1645,7 +2049,7 @@ function processarComando(texto) {
     }
     modoDescricao = true;
     limparDedupVoz();
-    document.getElementById('debug').textContent = '📝 Aguardando descrição...';
+    document.getElementById('debug').textContent = '📝 Waiting for note comment...';
     vibrar([40, 60, 40]);
     return;
   }
@@ -1685,7 +2089,7 @@ function processarComando(texto) {
 
 async function solicitarPermissao() {
   if (!isNative()) {
-    document.getElementById('debug').textContent = '⚠️ Apenas necessário no app nativo';
+    document.getElementById('debug').textContent = '⚠️ Only required in the native app';
     return;
   }
 
@@ -1693,7 +2097,7 @@ async function solicitarPermissao() {
   if (!plugin) return;
   const r = await plugin.requestPermissions();
   document.getElementById('debug').textContent =
-    r.speechRecognition === 'granted' ? '✅ Permissão concedida!' : '❌ Permissão negada';
+    r.speechRecognition === 'granted' ? '✅ Permission granted!' : '❌ Permission denied';
   if (r.speechRecognition !== 'granted') beepErro();
 }
 
@@ -1853,7 +2257,7 @@ async function carregarDados() {
       });
       atualizarNomesAvaliacoesUI();
       atualizarTela();
-      document.getElementById('debug').textContent = '✅ Dados recuperados!';
+      document.getElementById('debug').textContent = '✅ Data restored!';
       return true;
     }
   } catch (e) {}
@@ -1878,10 +2282,10 @@ function resetarExperimento() {
   atualizarUIFaixaNotas();
   limparDedupVoz();
   VozEngine.parar();
-  document.getElementById('fileLabel').textContent = 'plot_id · genotipo · testemunha';
+  document.getElementById('fileLabel').textContent = 'plot_id · genotype · check';
   document.getElementById('notaDigitada').value = '';
   atualizarTela();
-  document.getElementById('debug').textContent = '🔄 Reiniciado!';
+  document.getElementById('debug').textContent = '🔄 Reset complete!';
   garantirFocoDigitacao();
 }
 
@@ -1918,7 +2322,7 @@ function atualizarGrid() {
   document.getElementById('gridContainer').style.display = 'block';
   gridLabel.style.display = 'block';
 
-  let hdr = '<tr><th>Parcela</th>';
+  let hdr = '<tr><th>Plot</th>';
   for (let i = 1; i <= NUM_AVALIACOES; i++) hdr += `<th>${escHTML(nomeAvaliacao(i))}</th>`;
   hdr += '</tr>';
   document.getElementById('gridHeader').innerHTML = hdr;
@@ -1929,9 +2333,9 @@ function atualizarGrid() {
   const pag = dados.slice(ini, fim);
 
   let pagHtml = '';
-  if (paginaAtual > 1) pagHtml += `<button onclick="mudarPagina(${paginaAtual - 1})">◀ Anterior</button>`;
+  if (paginaAtual > 1) pagHtml += `<button onclick="mudarPagina(${paginaAtual - 1})">◀ Previous</button>`;
   pagHtml += `<span>${paginaAtual} / ${total}</span>`;
-  if (paginaAtual < total) pagHtml += `<button onclick="mudarPagina(${paginaAtual + 1})">Próxima ▶</button>`;
+  if (paginaAtual < total) pagHtml += `<button onclick="mudarPagina(${paginaAtual + 1})">Next ▶</button>`;
   document.getElementById('paginacao').innerHTML = pagHtml;
 
   let html = '';
@@ -1989,7 +2393,7 @@ function atualizarDisplayNotas() {
 
 function atualizarTela() {
   if (!dados.length) {
-    document.getElementById('plot').textContent = '📋 Nenhum CSV carregado';
+    document.getElementById('plot').textContent = '📋 No CSV loaded';
     document.getElementById('notasDisplay').innerHTML = '';
     document.getElementById('gridContainer').style.display = 'none';
     document.getElementById('gridLabel').style.display = 'none';
@@ -2000,14 +2404,14 @@ function atualizarTela() {
   if (current < dados.length) {
     const p = dados[current];
     document.getElementById('plot').innerHTML =
-      `<span class="plot-parcela">🌿 Parcela <strong>${escHTML(String(p.plot_id))}</strong>${p.testemunha ? ' <span class="plot-badge">● Testemunha</span>' : ''}</span><span class="plot-genotipo">${escHTML(p.genotipo)}</span>`;
+      `<span class="plot-parcela">🌿 Plot <strong>${escHTML(String(p.plot_id))}</strong>${p.testemunha ? ' <span class="plot-badge">● Check</span>' : ''}</span><span class="plot-genotipo">${escHTML(p.genotipo)}</span>`;
     atualizarDisplayNotas();
     atualizarDisplayDescricao();
     const pc = Math.floor(current / POR_PAGINA) + 1;
     if (pc !== paginaAtual) paginaAtual = pc;
     atualizarGrid();
   } else {
-    document.getElementById('plot').innerHTML = '🏁 <strong>Coleta finalizada!</strong>';
+    document.getElementById('plot').innerHTML = '🏁 <strong>Data collection complete!</strong>';
     document.getElementById('notasDisplay').innerHTML = '<div style="font-size:2rem;margin-top:8px;">🎉</div>';
     atualizarDisplayDescricao();
     atualizarGrid();
@@ -2046,8 +2450,10 @@ function proximaNota() {
   } else if (current + 1 < dados.length) {
     current++;
     colunaAtual = 1;
+    const virouBatida = deveAvisarViradaParcela();
+    if (virouBatida) beepVira();
     if (dados[current].testemunha) setTimeout(() => beepTestemunha(), 100);
-    setTimeout(() => falarParcelaSeNecessario(), 150);
+    setTimeout(() => falarParcelaSeNecessario(virouBatida), 150);
   } else {
     beepErro();
     return;
@@ -2081,8 +2487,10 @@ function pularParcela() {
     current++;
     colunaAtual = 1;
     beepNavegacao();
+    const virouBatida = deveAvisarViradaParcela();
+    if (virouBatida) beepVira();
     if (dados[current].testemunha) setTimeout(() => beepTestemunha(), 200);
-    setTimeout(() => falarParcelaSeNecessario(), 150);
+    setTimeout(() => falarParcelaSeNecessario(virouBatida), 150);
     atualizarTela();
     salvarDados();
   } else {
@@ -2116,7 +2524,7 @@ function salvarNota(numero) {
   if (!Number.isInteger(nota) || nota < NOTA_MIN || nota > NOTA_MAX) {
     beepErro();
     falarAvisoLocal(cfgIdioma().invalid, 1.35);
-    document.getElementById('debug').textContent = `❌ Nota não válida: ${numero} · faixa ${NOTA_MIN}-${NOTA_MAX}`;
+    document.getElementById('debug').textContent = `❌ Invalid score: ${numero} · range ${NOTA_MIN}-${NOTA_MAX}`;
     return false;
   }
 
@@ -2144,9 +2552,10 @@ function salvarNota(numero) {
     if (current + 1 < dados.length) {
       current++;
       colunaAtual = 1;
-      if (dados[current].plot_id % 10 === 0) beepVira();
+      const virouBatida = deveAvisarViradaParcela();
+      if (virouBatida) beepVira();
       if (dados[current].testemunha) setTimeout(() => beepTestemunha(), 200);
-      setTimeout(() => falarParcelaSeNecessario(), 350);
+      setTimeout(() => falarParcelaSeNecessario(virouBatida), 350);
     } else {
       atualizarTela();
       salvarDados();
@@ -2176,9 +2585,15 @@ function carregarCSV() {
     const headerLower = header.map(h => normalizarTextoVoz(h));
     const start = temHeader ? 1 : 0;
     const idxPlot = Math.max(0, headerLower.indexOf('plot_id'));
-    const idxGen = headerLower.indexOf('genotipo') >= 0 ? headerLower.indexOf('genotipo') : 1;
-    const idxTest = headerLower.indexOf('testemunha');
-    const idxDesc = headerLower.indexOf('descricao');
+    const idxGen = headerLower.indexOf('genotype') >= 0
+      ? headerLower.indexOf('genotype')
+      : (headerLower.indexOf('genotipo') >= 0 ? headerLower.indexOf('genotipo') : 1);
+    const idxTest = headerLower.indexOf('check') >= 0
+      ? headerLower.indexOf('check')
+      : headerLower.indexOf('testemunha');
+    const idxDesc = headerLower.indexOf('description') >= 0
+      ? headerLower.indexOf('description')
+      : headerLower.indexOf('descricao');
     const notaIdxs = [];
 
     if (temHeader) {
@@ -2197,8 +2612,9 @@ function carregarCSV() {
       for (let j = 1; j <= NUM_AVALIACOES; j++) {
         const candidatos = [
           normalizarTextoVoz(nomeAvaliacao(j)),
-          `avaliacao${j}`,
-          `nota${j}`,
+          `trait${j}`,
+          `score${j}`,
+          `rating${j}`,
           `a${j}`
         ];
         const idx = headerLower.findIndex(h => candidatos.includes(h));
@@ -2219,7 +2635,7 @@ function carregarCSV() {
 
       const genotipo = (cols[idxGen] ?? cols[1] ?? '').trim();
       const testemunha = idxTest >= 0
-        ? (cols[idxTest].trim().toLowerCase() === 'sim' || cols[idxTest].trim() === '1' || cols[idxTest].trim().toLowerCase() === 'yes')
+        ? ['yes', 'y', 'true', '1', 'check', 'sim'].includes(cols[idxTest].trim().toLowerCase())
         : false;
       const novo = { plot_id, genotipo, testemunha };
       for (let j = 1; j <= NUM_AVALIACOES; j++) {
@@ -2233,7 +2649,7 @@ function carregarCSV() {
     }
 
     if (!novos.length) {
-      alert('CSV inválido ou sem dados');
+      alert('Invalid CSV or no plot data found');
       return;
     }
 
@@ -2244,7 +2660,7 @@ function carregarCSV() {
     limparDedupVoz();
     atualizarTela();
     beepNota();
-    document.getElementById('debug').textContent = `✅ ${dados.length} parcelas · ${NUM_AVALIACOES} avaliações`;
+    document.getElementById('debug').textContent = `✅ ${dados.length} plots · ${NUM_AVALIACOES} traits`;
     salvarDados();
     garantirFocoDigitacao();
   };
@@ -2282,16 +2698,16 @@ function csvCampo(valor) {
 
 function exportarCSV() {
   if (!dados.length) {
-    alert('Nenhum dado para exportar');
+    alert('No data to export');
     return;
   }
 
-  let cab = 'plot_id,genotipo,testemunha';
+  let cab = 'plot_id,genotype,check';
   for (let i = 1; i <= NUM_AVALIACOES; i++) cab += `,${csvCampo(nomeAvaliacao(i))}`;
-  cab += ',descricao';
+  cab += ',description';
 
   const csv = cab + '\n' + dados.map(d => {
-    let l = `${d.plot_id},${csvCampo(d.genotipo)},${d.testemunha ? 'sim' : ''}`;
+    let l = `${d.plot_id},${csvCampo(d.genotipo)},${d.testemunha ? 'yes' : ''}`;
     for (let i = 1; i <= NUM_AVALIACOES; i++) l += `,${d[`nota${i}`] ?? ''}`;
     l += `,${csvCampo(d.descricao || '')}`;
     return l;
@@ -2299,20 +2715,20 @@ function exportarCSV() {
 
   const now = new Date();
   const ts = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-  const sug = `${nomeCSV || 'resultado'}_${ts}.csv`;
+  const sug = `${nomeCSV || 'trial_scores'}_${ts}.csv`;
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000;padding-bottom:env(safe-area-inset-bottom);';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-width:500px;">
       <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 20px;"></div>
-      <p style="font-size:1rem;font-weight:700;color:#000;margin:0 0 6px;">💾 Exportar CSV</p>
+      <p style="font-size:1rem;font-weight:700;color:#000;margin:0 0 6px;">💾 Export CSV</p>
       <p style="font-size:0.72rem;color:#8E8E93;margin:0 0 14px;">Timestamp: ${ts}</p>
       <input id="exportNome" type="text" value="${escHTML(sug)}"
         style="width:100%;border:1.5px solid #E5E5EA;border-radius:12px;padding:12px 14px;font-size:0.9rem;margin-bottom:16px;-webkit-appearance:none;appearance:none;">
       <div style="display:flex;gap:10px;">
-        <button id="exportCancelar" style="flex:1;background:#F2F2F7;color:#3C3C43;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:600;cursor:pointer;">Cancelar</button>
-        <button id="exportConfirmar" style="flex:2;background:#34C759;color:#fff;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:700;cursor:pointer;">Salvar</button>
+        <button id="exportCancelar" style="flex:1;background:#F2F2F7;color:#3C3C43;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="exportConfirmar" style="flex:2;background:#34C759;color:#fff;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:700;cursor:pointer;">Save</button>
       </div>
     </div>`;
 
@@ -2473,20 +2889,20 @@ function atualizarModoBolsoUI() {
   overlay.classList.toggle('ativo', modoBolso);
   const status = document.getElementById('pocketStatus');
   if (status) status.textContent = rodando
-    ? 'Toques acidentais bloqueados. Ouvindo pelo microfone.'
-    : 'Toques acidentais bloqueados. Toque em Voz se precisar iniciar a escuta depois de desbloquear.';
+    ? 'Accidental touches are locked. Listening through the microphone.'
+    : 'Accidental touches are locked. Tap Voice if you need to start listening after unlocking.';
 }
 
 function ativarModoBolso() {
   if (!dados.length) {
     beepErro();
-    document.getElementById('debug').textContent = '⚠️ Carregue um CSV antes do Modo bolso';
+    document.getElementById('debug').textContent = '⚠️ Load a CSV before using pocket mode';
     return;
   }
   modoBolso = true;
   atualizarModoBolsoUI();
   solicitarWakeLockBolso();
-  document.getElementById('debug').textContent = '🔒 Modo bolso ativo';
+  document.getElementById('debug').textContent = '🔒 Pocket mode active';
   if (!rodando && modoOnline) {
     VozEngine.iniciar();
     setTimeout(() => atualizarModoBolsoUI(), 600);
@@ -2498,7 +2914,7 @@ function desativarModoBolso() {
   cancelarDesbloqueioBolso();
   liberarWakeLockBolso();
   atualizarModoBolsoUI();
-  document.getElementById('debug').textContent = '🔓 Modo bolso desativado';
+  document.getElementById('debug').textContent = '🔓 Pocket mode disabled';
 }
 
 function iniciarDesbloqueioBolso(e) {
@@ -2544,6 +2960,8 @@ window.setFaixaNotas = setFaixaNotas;
 window.setIdiomaApp = setIdiomaApp;
 window.setNomeAvaliacao = setNomeAvaliacao;
 window.falarGuiaConfiguracao = falarGuiaConfiguracao;
+window.abrirTips = abrirTips;
+window.fecharTips = fecharTips;
 window.irParaCelula = irParaCelula;
 window.pularParcela = pularParcela;
 window.garantirFocoDigitacao = garantirFocoDigitacao;
@@ -2566,11 +2984,14 @@ window.addEventListener('load', async () => {
   atualizarNomesAvaliacoesUI();
   configurarDigitacao();
   configurarModoBolso();
+  document.body.classList.remove('auth-locked');
+  document.body.classList.add('authenticated');
   const recuperouDados = await carregarDados();
-  if (!recuperouDados) document.getElementById('debug').textContent = `✅ App atualizado · ${APP_VERSION}`;
+  if (!recuperouDados) document.getElementById('debug').textContent = `✅ App updated · ${APP_VERSION}`;
   setTimeout(() => garantirFocoDigitacao(), 300);
 
 });
 </script>
 </body>
 </html>
+
